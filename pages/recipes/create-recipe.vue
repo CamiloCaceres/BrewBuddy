@@ -17,38 +17,61 @@
           </UFormGroup>
         </div>
         <h2 class="text-xl font-bold mb-2">Fermentation 1 Details</h2>
-        <UFormGroup label="Tea Type">
-          <USelectMenu
-            v-model="teaType"
-            :options="teaTypes"
-            placeholder="Select a tea type"
-          />
-        </UFormGroup>
-        <UFormGroup type="number" :label="`Sugar amount (${measurementUnit})`">
+
+        <UFormGroup type="number" :label="`Water amount (${measurementUnit})`">
           <UInput
-            v-model="sugar_amount"
+            v-model="water_amount"
+            type="number"
             :placeholder="`Amount (${measurementUnit})`"
           />
         </UFormGroup>
+
         <div class="flex gap-4">
-          <UFormGroup label="Expected Fermentation 1 Time (days)">
-            <UInput
-              v-model="fermentation1Days"
-              placeholder="Enter number of days"
+          <UFormGroup class="flex-1" label="Tea Type">
+            <USelectMenu
+              v-model="teaType"
+              :options="teaTypes"
+              placeholder="Select a tea type"
             />
           </UFormGroup>
-
-          <UFormGroup v-if="fermentation1Days" label="Expected F1 End Date">
-            <h1>{{ expectedF1EndDate }}</h1>
+          <UFormGroup type="number" :label="`Tea amount (${measurementUnit})`">
+            <UInput
+              v-model="tea_amount"
+              type="number"
+              :placeholder="`Amount (${measurementUnit})`"
+            />
           </UFormGroup>
         </div>
+
+        <UFormGroup type="number" :label="`Sugar amount (${measurementUnit})`">
+          <UInput
+            v-model="sugar_amount"
+            type="number"
+            :placeholder="`Amount (${measurementUnit})`"
+          />
+        </UFormGroup>
+
+        <UFormGroup :label="`Starter (${measurementUnit})`">
+          <UInput v-model="starter_amount" placeholder="Enter starter amount" />
+        </UFormGroup>
+
+        <UFormGroup label="Expected Fermentation 1 Time (days)">
+          <UInput
+            v-model="fermentation1Days"
+            placeholder="Enter number of days"
+            type="number"
+          />
+        </UFormGroup>
+
         <h2 class="text-xl font-bold mb-2">Fermentation 2 Details</h2>
         <UFormGroup label="Fermentation 2 duration (days)">
           <UInput
             v-model="fermentation2Days"
             placeholder="Enter number of days"
+            type="number"
           />
-         </UFormGroup>
+        </UFormGroup>
+
         <UFormGroup :label="`Ingredients in ${measurementUnit}`">
           <div
             v-for="(ingredient, index) in ingredients"
@@ -62,6 +85,7 @@
             />
             <UInput
               v-model="ingredient.amount"
+              type="number"
               placeholder="Amount"
               class="w-24"
             />
@@ -72,15 +96,20 @@
               @click="removeIngredient(index)"
             />
           </div>
-          <UButton block variant="outline" @click="addIngredient" class="w-full mt-2">
+          <UButton
+            block
+            variant="outline"
+            @click="addIngredient"
+            class="w-full mt-2"
+          >
             Add Ingredient
           </UButton>
         </UFormGroup>
 
-        <UFormGroup label="Instructions">
+        <UFormGroup label="Notes">
           <UTextarea
-            v-model="instructions"
-            placeholder="Enter recipe instructions"
+            v-model="notes  "
+            placeholder="Enter recipe notes "
           />
         </UFormGroup>
 
@@ -101,8 +130,11 @@ interface Ingredient {
 const name = ref("");
 const teaType = ref("");
 const sugar_amount = ref(0);
+const water_amount = ref(0);
+const tea_amount = ref(0);
+const starter_amount = ref(0);
 const ingredients = ref<Ingredient[]>([{ name: "", amount: undefined }]);
-const instructions = ref("");
+const notes  = ref("");
 
 const fermentation1Days = ref(0);
 const fermentation2Days = ref(0);
@@ -111,8 +143,8 @@ const expectedF1EndDate = computed(() => {
   if (fermentation1Days.value > 0) {
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + fermentation1Days.value);
-    const day = String(endDate.getDate()).padStart(2, '0');
-    const month = String(endDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(endDate.getDate()).padStart(2, "0");
+    const month = String(endDate.getMonth() + 1).padStart(2, "0"); // Months are zero-based
     const year = endDate.getFullYear();
     return `${day}-${month}-${year}`; // Format as DD-MM-YYYY
   }
@@ -172,7 +204,7 @@ const handleSubmit = () => {
   if (
     !name.value ||
     ingredients.value.some((i) => !i.name || !i.amount) ||
-    !instructions.value
+    !notes  .value
   ) {
     alert("Please fill in all fields");
     return;
@@ -184,10 +216,15 @@ const handleSubmit = () => {
     teaType: teaType.value,
     sugar_amount: sugar_amount.value,
     ingredients: ingredients.value,
-    instructions: instructions.value,
+    notes : notes  .value,
     measurementUnit: measurementUnit.value,
     fermentation1Days: fermentation1Days.value,
     expectedF1EndDate: expectedF1EndDate.value,
+    fermentation2Days: fermentation2Days.value,
+    water_amount: water_amount.value,
+    tea_amount: tea_amount.value,
+    starter_amount: starter_amount.value,
+
   };
   console.log("New recipe:", newRecipe);
   // Reset form or navigate to the new recipe view

@@ -1,2 +1,5 @@
 [build.environment]
-  NPM_FLAGS = "--no-frozen-lockfile"
+NPM_FLAGS = "--no-frozen-lockfile"
+
+[[plugins]]
+package = "netlify-plugin-pnpm"

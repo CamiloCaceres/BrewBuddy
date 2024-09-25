@@ -1,75 +1,73 @@
-# Nuxt UI Minimal Starter
+# KombuchaTrack
 
-Look at [Nuxt docs](https://nuxt.com/docs/getting-started/introduction) and [Nuxt UI docs](https://ui.nuxt.com) to learn more.
+KombuchaTrack is a comprehensive web application designed to help kombucha brewers track their batches, manage recipes, and optimize their brewing process. Whether you're a beginner or an experienced brewer, KombuchaTrack provides the tools you need to create consistently great kombucha.
 
-## Setup
+![KombuchaTrack Logo](path/to/logo.png)
 
-Make sure to install the dependencies:
+## Features
 
-```bash
-# npm
-npm install
+- **Batch Tracking**: Create and monitor kombucha batches from start to finish.
+- **Recipe Management**: Store, edit, and share your favorite kombucha recipes.
+- **Fermentation Stages**: Track both first and second fermentation processes.
+- **Customizable Measurements**: Support for various units (metric and imperial).
+- **Flavor Profiling**: Record and analyze flavor profiles for each batch.
+- **Photo Integration**: Add photos to document your brewing journey.
+- **Reminder System**: Set custom reminders for each stage of the brewing process.
+- **Data Visualization**: View trends and comparisons across your batches.
+- **Educational Resources**: Access a knowledge base of kombucha brewing tips and techniques.
 
-# pnpm
-pnpm install
+## Tech Stack
 
-# yarn
-yarn install
+- Frontend: Nuxt 3 with TypeScript
+- Backend: PocketBase
+- Styling: [NuxtUI, Tailwind CSS]
 
-# bun
-bun install
-```
+## Getting Started
 
-## Development Server
+### Prerequisites
 
-Start the development server on `http://localhost:3000`:
+- Node.js (v14 or later)
+- pnpm 
 
-```bash
-# npm
-npm run dev
+### Installation
 
-# pnpm
-pnpm run dev
+1. Clone the repository:
+   ```
+   git clone https://github.com/CamiloCaceres/BrewBuddy
+   ```
 
-# yarn
-yarn dev
+2. Navigate to the project directory:
+   ```
+   cd BrewBuddy
+   ```
 
-# bun
-bun run dev
-```
+3. Install dependencies:
+   ```
+   pnpm install
+   ```
 
-## Production
+4. Set up environment variables:
+   - Copy `.env.example` to `.env`
+   - Fill in the required environment variables
 
-Build the application for production:
+5. Start the development server:
+   ```
+   pnpm run dev
+   ```
 
-```bash
-# npm
-npm run build
+6. Open your browser and visit `http://localhost:3000`
 
-# pnpm
-pnpm run build
+## Usage
 
-# yarn
-yarn build
+TODO
+## License
 
-# bun
-bun run build
-```
+This project is licensed under the [MIT License](LICENSE.md).
 
-Locally preview production build:
 
-```bash
-# npm
-npm run preview
 
-# pnpm
-pnpm run preview
+## Contact
 
-# yarn
-yarn preview
+[Camilo Caceres] -  camiloac97@gmail.com
 
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Project Link: [https://github.com/CamiloCaceres/BrewBuddy](https://github.com/CamiloCaceres/BrewBuddy)

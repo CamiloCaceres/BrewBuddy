@@ -5,22 +5,34 @@
       <UCard>
         <template #header>
           <div class="flex justify-between items-center">
-            <h2 class="text-xl font-semibold">Current Stage: {{ getCurrentStageName() }}</h2>
+            <h2 class="text-xl font-semibold">
+              Current Stage: {{ getCurrentStageName() }}
+            </h2>
             <UBadge :color="getStatusColor()">{{ batch.status }}</UBadge>
           </div>
         </template>
         <div class="space-y-4">
-          <p><strong>Current Day:</strong> {{ batch.currentFermentationDay }}</p>
-          <UProgress :value="fermentationProgress" color="primary" class="mb-2" />
+          <p>
+            <strong>Current Day:</strong> {{ batch.currentFermentationDay }}
+          </p>
+          <UProgress
+            :value="fermentationProgress"
+            color="primary"
+            class="mb-2"
+          />
           <p>{{ fermentationProgressText }}</p>
+
           <div class="flex space-x-2">
-            <UButton v-for="action in getCurrentStageActions()" :key="action" @click="performAction(action)">
-              {{ action }}
+            <UButton
+              v-for="action in getCurrentStageActions()"
+              :key="action"
+              @click="performAction(action)"
+            >
+              {{ getActionDisplayName(action) }}
             </UButton>
           </div>
         </div>
       </UCard>
-
       <UCard>
         <template #header>
           <h2 class="text-xl font-semibold">Recipe: {{ batch.recipeName }}</h2>
@@ -28,16 +40,33 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p><strong>Tea Type:</strong> {{ batch.teaType }}</p>
-            <p><strong>Sugar:</strong> {{ batch.sugar.amount }}{{ batch.sugar.unit }} ({{ batch.sugar.type }})</p>
-            <p><strong>Water:</strong> {{ batch.water.amount }}{{ batch.water.unit }}</p>
-            <p><strong>Tea:</strong> {{ batch.tea.amount }}{{ batch.tea.unit }}</p>
-            <p><strong>Starter:</strong> {{ batch.starter.amount }}{{ batch.starter.unit }}</p>
-            <p><strong>Yield:</strong> {{ batch.yield.amount }}{{ batch.yield.unit }}</p>
+            <p>
+              <strong>Sugar:</strong> {{ batch.sugar.amount
+              }}{{ batch.sugar.unit }} ({{ batch.sugar.type }})
+            </p>
+            <p>
+              <strong>Water:</strong> {{ batch.water.amount
+              }}{{ batch.water.unit }}
+            </p>
+            <p>
+              <strong>Tea:</strong> {{ batch.tea.amount }}{{ batch.tea.unit }}
+            </p>
+            <p>
+              <strong>Starter:</strong> {{ batch.starter.amount
+              }}{{ batch.starter.unit }}
+            </p>
+            <p>
+              <strong>Yield:</strong> {{ batch.yield.amount
+              }}{{ batch.yield.unit }}
+            </p>
           </div>
           <div>
             <h3 class="text-lg font-semibold mb-2">Ingredients:</h3>
             <ul>
-              <li v-for="ingredient in batch.ingredients" :key="ingredient.name">
+              <li
+                v-for="ingredient in batch.ingredients"
+                :key="ingredient.name"
+              >
                 {{ ingredient.name }}: {{ ingredient.amount }}g
               </li>
             </ul>
@@ -51,15 +80,32 @@
         </template>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p><strong>Start Date:</strong> {{ formatDate(batch.startDate) }}</p>
-            <p><strong>First Fermentation Vessel:</strong> {{ batch.f1Vessel }}</p>
-            <p><strong>Second Fermentation Vessel:</strong> {{ batch.f2Vessel }}</p>
+            <p>
+              <strong>Start Date:</strong> {{ formatDate(batch.startDate) }}
+            </p>
+            <p>
+              <strong>First Fermentation Vessel:</strong> {{ batch.f1Vessel }}
+            </p>
+            <p>
+              <strong>Second Fermentation Vessel:</strong> {{ batch.f2Vessel }}
+            </p>
           </div>
           <div>
-            <p><strong>Tracking Temperature:</strong> {{ batch.trackTemperature ? 'Yes' : 'No' }}</p>
-            <p><strong>Tracking pH:</strong> {{ batch.trackpH ? 'Yes' : 'No' }}</p>
-            <p><strong>Expected F1 End Date:</strong> {{ batch.expected_f1_end_date }}</p>
-            <p><strong>Expected F2 End Date:</strong> {{ batch.expected_f2_end_date }}</p>
+            <p>
+              <strong>Tracking Temperature:</strong>
+              {{ batch.trackTemperature ? "Yes" : "No" }}
+            </p>
+            <p>
+              <strong>Tracking pH:</strong> {{ batch.trackpH ? "Yes" : "No" }}
+            </p>
+            <p>
+              <strong>Expected F1 End Date:</strong>
+              {{ batch.expected_f1_end_date }}
+            </p>
+            <p>
+              <strong>Expected F2 End Date:</strong>
+              {{ batch.expected_f2_end_date }}
+            </p>
           </div>
         </div>
       </UCard>
@@ -75,14 +121,29 @@
       <p>Loading batch details...</p>
     </div>
   </UContainer>
+  <UModal v-model="isOpen">
+    <UCard>
+      <template #header>
+        <h3 class="text-lg font-semibold">Add entry</h3>
+      </template>
+      <p>{{ batch.notes }}</p>
+      <UButton
+        v-for="action in getCurrentStageActions()"
+        :key="action"
+        @click="performAction(action)"
+      >
+        {{ action }}
+      </UButton>
+    </UCard>
+  </UModal>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'nuxt/app'
+import { ref, computed } from "vue";
+import { useRoute, useRouter } from "nuxt/app";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 interface Ingredient {
   name: string;
@@ -110,7 +171,7 @@ interface Batch {
   starter: { amount: number; unit: string };
   yield: { amount: number; unit: string };
   startDate: Date;
-  status: 'pending' | 'firstFermentation' | 'secondFermentation' | 'bottling' | 'conditioning' | 'ready' | 'completed';
+  status: "pending" | "firstFermentation" | "secondFermentation" | "completed";
   currentFermentationDay: number;
   notes: string;
   f1Vessel: string;
@@ -135,8 +196,10 @@ const batch = ref<Batch>({
   ],
   instructions: {
     brewing: "Brew tea and add sugar",
-    firstFermentation: "Cool to room temperature, Add starter tea and SCOBY, Cover and ferment for 7-10 days",
-    secondFermentation: "Bottle and add flavoring if desired, Second fermentation for 2-3 days",
+    firstFermentation:
+      "Cool to room temperature, Add starter tea and SCOBY, Cover and ferment for 7-10 days",
+    secondFermentation:
+      "Bottle and add flavoring if desired, Second fermentation for 2-3 days",
   },
   fermentation: {
     firstFermentation: { minDays: 7, maxDays: 10 },
@@ -146,97 +209,149 @@ const batch = ref<Batch>({
   tea: { amount: 15, unit: "grams" },
   starter: { amount: 200, unit: "ml" },
   yield: { amount: 2, unit: "liters" },
-  startDate: new Date('2023-09-24'),
-  status: 'firstFermentation',
+  startDate: new Date("2023-09-24"),
+  status: "pending",
   currentFermentationDay: 3,
-  notes: 'First attempt at classic kombucha',
-  f1Vessel: 'Large Glass Jar',
-  f2Vessel: 'Swing Top Bottles',
+  notes: "First attempt at classic kombucha",
+  f1Vessel: "Large Glass Jar",
+  f2Vessel: "Swing Top Bottles",
   trackTemperature: true,
   trackpH: false,
-  expected_f1_end_date: '2023-10-01',
-  expected_f2_end_date: '2023-10-04',
-})
+  expected_f1_end_date: "2023-10-01",
+  expected_f2_end_date: "2023-10-04",
+});
 
-
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString()
-}
+const isOpen = ref(false);
 
 const fermentationProgress = computed(() => {
-  const totalDays = batch.value.fermentation.firstFermentation.maxDays + batch.value.fermentation.secondFermentation.maxDays
-  return (batch.value.currentFermentationDay / totalDays) * 100
-})
+  const totalDays =
+    batch.value.fermentation.firstFermentation.maxDays +
+    batch.value.fermentation.secondFermentation.maxDays;
+  return (batch.value.currentFermentationDay / totalDays) * 100;
+});
 
 const fermentationProgressText = computed(() => {
-  if (batch.value.status === 'firstFermentation') {
-    return `Day ${batch.value.currentFermentationDay} of ${batch.value.fermentation.firstFermentation.maxDays} (First Fermentation)`
-  } else if (batch.value.status === 'secondFermentation') {
-    const secondFermentationDay = batch.value.currentFermentationDay - batch.value.fermentation.firstFermentation.maxDays
-    return `Day ${secondFermentationDay} of ${batch.value.fermentation.secondFermentation.maxDays} (Second Fermentation)`
+  if (batch.value.status === "firstFermentation") {
+    return `Day ${batch.value.currentFermentationDay} of ${batch.value.fermentation.firstFermentation.maxDays} (First Fermentation)`;
+  } else if (batch.value.status === "secondFermentation") {
+    const secondFermentationDay =
+      batch.value.currentFermentationDay -
+      batch.value.fermentation.firstFermentation.maxDays;
+    return `Day ${secondFermentationDay} of ${batch.value.fermentation.secondFermentation.maxDays} (Second Fermentation)`;
   } else {
-    return 'Fermentation Complete'
+    return "Fermentation Complete";
   }
-})
+});
 
 const getCurrentStageName = () => {
   switch (batch.value.status) {
-    case 'pending': return 'Batch Created'
-    case 'firstFermentation': return 'First Fermentation (F1)'
-    case 'secondFermentation': return 'Second Fermentation (F2)'
-    case 'bottling': return 'Bottling'
-    case 'conditioning': return 'Bottle Conditioning'
-    case 'ready': return 'Ready to Drink'
-    case 'completed': return 'Completed'
-    default: return 'Unknown'
+    case "pending":
+      return "Batch Created";
+    case "firstFermentation":
+      return "First Fermentation (F1)";
+    case "secondFermentation":
+      return "Second Fermentation (F2)";
+    case "completed":
+      return "Completed";
+    default:
+      return "Unknown";
   }
-}
+};
 
 const getStatusColor = () => {
   switch (batch.value.status) {
-    case 'pending': return 'gray'
-    case 'firstFermentation':
-    case 'secondFermentation':
-    case 'bottling':
-    case 'conditioning': return 'blue'
-    case 'ready': return 'green'
-    case 'completed': return 'purple'
-    default: return 'gray'
-  }
-}
-
-const getCurrentStageActions = () => {
-  switch (batch.value.status) {
-    case 'pending':
-      return ['Start First Fermentation', 'Edit Batch Details', 'Delete Batch']
-    case 'firstFermentation':
-      return ['Add Note', 'Add Flavor Profile', 'Add Photo', 'Record Temperature', 'Record pH', 'End F1 / Start F2', 'Discard Batch']
-    case 'secondFermentation':
-      return ['Add Note', 'Add Flavor Profile', 'Add Photo', 'Record Temperature', 'End F2 / Start Bottling']
-    case 'bottling':
-      return ['Record Bottling Details', 'Add Note', 'Add Photo', 'Start Bottle Conditioning']
-    case 'conditioning':
-      return ['Add Note', 'Record Temperature', 'End Conditioning / Mark as Ready']
-    case 'ready':
-      return ['Add Tasting Notes', 'Rate Final Product', 'Add Photo', 'Mark as Consumed', 'Create New Batch from This Recipe']
-    case 'completed':
-      return ['View Batch Summary', 'Compare with Other Batches', 'Archive Batch']
+    case "pending":
+      return "gray";
+    case "firstFermentation":
+    case "secondFermentation":
+      return "blue";
+    case "completed":
+      return "green";
     default:
-      return []
+      return "gray";
   }
-}
+};
+const getCurrentStageActions = () => {
+  const actions = ["addEntry", "discardBatch"];
 
+  if (batch.value.status !== "completed") {
+    actions.unshift("moveToNextStage");
+  }
+
+  return actions;
+};
+const getActionDisplayName = (action: string) => {
+  switch (action) {
+    case "moveToNextStage":
+      return batch.value.status === "pending"
+        ? "Start First Fermentation"
+        : "Move to Next Stage";
+    case "addEntry":
+      return "Add Entry";
+    case "discardBatch":
+      return "Discard Batch";
+    default:
+      return action;
+  }
+};
 const performAction = (action: string) => {
-  // Implement the logic for each action
-  console.log(`Performing action: ${action}`)
-  // You'll need to implement the actual logic for each action here
-}
+  console.log(`Performing action: ${action}`);
+
+  switch (action) {
+    case "moveToNextStage":
+      moveToNextStage();
+      break;
+    case "addEntry":
+      addEntry();
+      break;
+    case "discardBatch":
+      discardBatch();
+      break;
+    default:
+      console.log(`Action not implemented: ${action}`);
+  }
+};
+const moveToNextStage = () => {
+  switch (batch.value.status) {
+    case "pending":
+      batch.value.status = "firstFermentation";
+      batch.value.currentFermentationDay = 1;
+      break;
+    case "firstFermentation":
+      batch.value.status = "secondFermentation";
+      batch.value.currentFermentationDay =
+        batch.value.fermentation.firstFermentation.maxDays + 1;
+      break;
+    case "secondFermentation":
+      batch.value.status = "completed";
+      batch.value.currentFermentationDay =
+        batch.value.fermentation.firstFermentation.maxDays +
+        batch.value.fermentation.secondFermentation.maxDays;
+      break;
+    case "completed":
+      console.log("Batch is already completed");
+      break;
+  }
+};
+
+const addEntry = () => {
+  isOpen.value = true;
+};
+
+const discardBatch = () => {
+  batch.value.status = "pending";
+  batch.value.currentFermentationDay = 0;
+};
+
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString();
+};
 
 // Additional actions available at all stages
 const commonActions = [
-  'View Batch Timeline',
-  'View/Edit Recipe Used',
-  'Set Reminders',
-  'Share Batch Progress'
-]
+  "View Batch Timeline",
+  "View/Edit Recipe Used",
+  "Set Reminders",
+  "Share Batch Progress",
+];
 </script>

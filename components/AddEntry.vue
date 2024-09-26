@@ -25,12 +25,14 @@
               <UFormGroup label="Date" name="date">
                 <UInput type="date" v-model="formState.dateString" />
               </UFormGroup>
-              <UFormGroup label="Fermentation Stage" name="fermentationStage">
-                <URadio
-                  v-model="formState.fermentationStage"
+              <UFormGroup label="Status" name="status">
+                <URadioGroup
+                  v-model="formState.status"
                   :options="[
-                    { label: 'First Fermentation', value: 'F1' },
-                    { label: 'Second Fermentation', value: 'F2' },
+                    { label: 'Pending', value: 'pending' },
+                    { label: 'First Fermentation', value: 'firstFermentation' },
+                    { label: 'Second Fermentation', value: 'secondFermentation' },
+                    { label: 'Completed', value: 'completed' },
                   ]"
                 />
               </UFormGroup>
@@ -43,7 +45,7 @@
           <!-- Step 2: Measurements -->
           <div v-if="currentStep === 2">
             <h4 class="text-lg font-medium mb-4">Measurements</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1  gap-4">
               <UFormGroup label="Temperature" name="temperature">
                 <div class="flex space-x-2">
                   <UInput type="number" v-model="formState.temperature.value" class="flex-grow" />
@@ -57,8 +59,8 @@
                   />
                 </div>
               </UFormGroup>
-              <UFormGroup label="pH" name="pH">
-                <UInput type="number" v-model="formState.pH" step="0.1" />
+              <UFormGroup :label="`pH (${formState.pH})`"  name="pH">
+                <URange v-model="formState.pH" :max="14" :step="0.1" :min="0" color="amber" />
               </UFormGroup>
               <UFormGroup label="Pellicle Thickness" name="pellicle.thickness">
                 <div class="flex space-x-2">
@@ -96,16 +98,14 @@
                 />
               </UFormGroup>
             </div>
-            <UFormGroup label="Smell" name="smell">
+            <UFormGroup label="Smell" name="smell" class="mb-4">
               <UInput type="text" v-model="formState.smell" />
             </UFormGroup>
-            <UFormGroup label="Flavor Profile" name="flavorProfile">
               <FlavorProfile
                 :initial-flavor-profile="formState.flavorProfile"
                 @update:flavor-profile="updateFlavorProfile"
               />
-            </UFormGroup>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <UFormGroup label="Taste Rating" name="tasteRating">
                 <UInput
                   type="number"
@@ -196,20 +196,20 @@
   
   <script setup lang="ts">
   import { reactive, ref, computed } from "vue";
-  import type { KombuchaEntry } from "@/types";
+  import type { Entry } from "@/types";
   
   const emit = defineEmits<{
-    (e: "submit", formData: KombuchaEntry): void;
+    (e: "submit", formData: Entry): void;
   }>();
   
  
-  const formState: KombuchaEntry = reactive({
+  const formState: Entry = reactive({
     dateString: computed({
       get: () => formState.date.toISOString().split("T")[0],
       set: (val: string) => (formState.date = new Date(val)),
     }),
     date: new Date(),
-    fermentationStage: "F1" as "F1" | "F2",
+    status: "pending" as "pending" | "firstFermentation" | "secondFermentation" | "completed",
     fermentationDay: 1,
     temperature: {
       value: 0,
@@ -266,7 +266,7 @@
   };
   
   const updateFlavorProfile = (
-    newFlavorProfile: KombuchaEntry["flavorProfile"]
+    newFlavorProfile: Entry["flavorProfile"]
   ) => {
     formState.flavorProfile = newFlavorProfile;
   };
@@ -288,7 +288,7 @@
   };
   
   const onSubmit = () => {
-    const entryData: KombuchaEntry = {
+    const entryData: Entry = {
       ...formState,
       date: formState.date, // Use the Date object, not the string
     };

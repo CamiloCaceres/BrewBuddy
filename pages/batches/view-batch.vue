@@ -121,7 +121,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "nuxt/app";
-import type { KombuchaEntry } from "@/types";
+import type { Entry } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
@@ -161,7 +161,7 @@ interface Batch {
   startDate: Date;
   status: "pending" | "firstFermentation" | "secondFermentation" | "completed";
   currentFermentationDay: number;
-  entries: KombuchaEntry[];
+  entries: Entry[];
   f1Vessel: string;
   f2Vessel: string;
   trackTemperature: boolean;
@@ -211,14 +211,14 @@ const batch = ref<Batch>({
 
 const isOpen = ref(false);
 
-const handleEntrySubmit = (formData: KombuchaEntry) => {
+const handleEntrySubmit = (formData: Entry) => {
   console.log("New entry:", formData);
   batch.value.entries.push({
     ...formData,
     // Do I need this below?
     date: new Date(),
     dateString: new Date().toISOString().split("T")[0],
-    fermentationStage: batch.value.status === "firstFermentation" ? "F1" : "F2",
+    status: batch.value.status,
     fermentationDay: batch.value.currentFermentationDay,
     pH: formData.pH,
     temperature: formData.temperature,

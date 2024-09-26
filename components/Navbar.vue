@@ -37,9 +37,9 @@
             My Account
           </UButton>
           <template #items>
-            <UDropdownItem to="/profile">Profile</UDropdownItem>
-            <UDropdownItem to="/settings">Settings</UDropdownItem>
-            <UDropdownItem @click="logout">Logout</UDropdownItem>
+            <UButton to="/profile">Profile</UButton>
+            <UButton to="/settings">Settings</UButton>
+            <UButton @click="logout">Logout</UButton>
           </template>
         </UDropdown>
       </div>
@@ -118,8 +118,8 @@ const links = [
   { name: 'Dashboard', path: '/dashboard', icon: 'i-heroicons-home' },
   { name: 'Batches', path: '/batches', icon: 'i-heroicons-beaker' },
   { name: 'Recipes', path: '/recipes', icon: 'i-heroicons-book-open' },
-  { name: 'Community', path: '/community', icon: 'i-heroicons-users' },
-]
+/*   { name: 'Community', path: '/community', icon: 'i-heroicons-users' },
+ */]
 
 const isMenuOpen = ref(false)
 const isLoggedIn = ref(false) // Replace with actual auth state

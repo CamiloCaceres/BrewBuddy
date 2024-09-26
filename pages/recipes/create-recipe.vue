@@ -184,19 +184,10 @@
           </div>
         </UFormGroup>
 
-        <h2 class="text-xl font-bold mb-2">Flavor Profile</h2>
-        <UFormGroup :label="`Sweetness (${recipe.flavorProfile.sweetness}/10)`">
-          <URange v-model="recipe.flavorProfile.sweetness" :min="0" :max="10" />
-        </UFormGroup>
-        <UFormGroup :label="`Acidity (${recipe.flavorProfile.acidity}/10)`">
-          <URange v-model="recipe.flavorProfile.acidity" :min="0" :max="10" />
-        </UFormGroup>
-        <UFormGroup :label="`Bitterness (${recipe.flavorProfile.bitterness}/10)`">
-          <URange v-model="recipe.flavorProfile.bitterness" :min="0" :max="10" />
-        </UFormGroup>
-        <UFormGroup :label="`Carbonation (${recipe.flavorProfile.carbonation}/10)`">
-          <URange v-model="recipe.flavorProfile.carbonation" :min="0" :max="10" />
-        </UFormGroup>
+        <FlavorProfile
+      :initial-flavor-profile="recipe.flavorProfile"
+      @update:flavor-profile="updateFlavorProfile"
+    />
 
         <UFormGroup label="Difficulty">
           <USelectMenu
@@ -266,6 +257,7 @@ interface Ingredient {
   unit: string;
 }
 
+
 const recipe = reactive({
   id: 1,
   name: "",
@@ -332,6 +324,10 @@ const addTag = () => {
 
 const removeTag = (index: number) => {
   recipe.tags.splice(index, 1);
+};
+
+const updateFlavorProfile = (newFlavorProfile: { sweetness: number; acidity: number; bitterness: number; carbonation: number }) => {
+  recipe.flavorProfile = newFlavorProfile;
 };
 
 const handleSubmit = () => {

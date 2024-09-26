@@ -1,6 +1,6 @@
 <template>
   <UContainer class="container mx-auto max-w-4xl">
-    <h1 class="text-3xl font-bold mb-6">Batch Details: {{ batch.name }}</h1>
+    <h1 class="text-3xl font-bold my-6">Batch Details: {{ batch.name }}</h1>
     <div v-if="batch" class="space-y-6">
       <UCard>
         <template #header>
@@ -23,6 +23,7 @@
           <p>{{ fermentationProgressText }}</p>
 
           <div class="flex space-x-2">
+            <AddEntry @submit="handleEntrySubmit" />
             <UButton
               v-for="action in getCurrentStageActions()"
               :key="action"
@@ -109,41 +110,28 @@
           </div>
         </div>
       </UCard>
-
-      <UCard>
-        <template #header>
-          <h3 class="text-lg font-semibold">Notes</h3>
-        </template>
-        <p>{{ batch.notes }}</p>
-      </UCard>
     </div>
     <div v-else>
       <p>Loading batch details...</p>
     </div>
   </UContainer>
-  <UModal v-model="isOpen">
-    <UCard>
-      <template #header>
-        <h3 class="text-lg font-semibold">Add entry</h3>
-      </template>
-      <p>{{ batch.notes }}</p>
-      <UButton
-        v-for="action in getCurrentStageActions()"
-        :key="action"
-        @click="performAction(action)"
-      >
-        {{ action }}
-      </UButton>
-    </UCard>
-  </UModal>
+
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "nuxt/app";
+import type { KombuchaEntry } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
+
+interface FlavorProfile {
+  sweetness: number;
+  acidity: number;
+  bitterness: number;
+  carbonation: number;
+}
 
 interface Ingredient {
   name: string;
@@ -173,7 +161,7 @@ interface Batch {
   startDate: Date;
   status: "pending" | "firstFermentation" | "secondFermentation" | "completed";
   currentFermentationDay: number;
-  notes: string;
+  entries: KombuchaEntry[];
   f1Vessel: string;
   f2Vessel: string;
   trackTemperature: boolean;
@@ -212,16 +200,37 @@ const batch = ref<Batch>({
   startDate: new Date("2023-09-24"),
   status: "pending",
   currentFermentationDay: 3,
-  notes: "First attempt at classic kombucha",
   f1Vessel: "Large Glass Jar",
   f2Vessel: "Swing Top Bottles",
   trackTemperature: true,
   trackpH: false,
   expected_f1_end_date: "2023-10-01",
   expected_f2_end_date: "2023-10-04",
+  entries: [],
 });
 
 const isOpen = ref(false);
+
+const handleEntrySubmit = (formData: KombuchaEntry) => {
+  console.log("New entry:", formData);
+  batch.value.entries.push({
+    ...formData,
+    // Do I need this below?
+    date: new Date(),
+    dateString: new Date().toISOString().split("T")[0],
+    fermentationStage: batch.value.status === "firstFermentation" ? "F1" : "F2",
+    fermentationDay: batch.value.currentFermentationDay,
+    pH: formData.pH,
+    temperature: formData.temperature,
+    notes: formData.notes,
+    flavorProfile: {
+      sweetness: 0,
+      acidity: 0,
+      bitterness: 0,
+      carbonation: 0,
+    },
+  });
+};
 
 const fermentationProgress = computed(() => {
   const totalDays =
@@ -272,7 +281,7 @@ const getStatusColor = () => {
   }
 };
 const getCurrentStageActions = () => {
-  const actions = ["addEntry", "discardBatch"];
+  const actions = ["discardBatch"];
 
   if (batch.value.status !== "completed") {
     actions.unshift("moveToNextStage");
@@ -286,8 +295,6 @@ const getActionDisplayName = (action: string) => {
       return batch.value.status === "pending"
         ? "Start First Fermentation"
         : "Move to Next Stage";
-    case "addEntry":
-      return "Add Entry";
     case "discardBatch":
       return "Discard Batch";
     default:
@@ -301,9 +308,7 @@ const performAction = (action: string) => {
     case "moveToNextStage":
       moveToNextStage();
       break;
-    case "addEntry":
-      addEntry();
-      break;
+
     case "discardBatch":
       discardBatch();
       break;
@@ -334,10 +339,6 @@ const moveToNextStage = () => {
   }
 };
 
-const addEntry = () => {
-  isOpen.value = true;
-};
-
 const discardBatch = () => {
   batch.value.status = "pending";
   batch.value.currentFermentationDay = 0;
@@ -354,4 +355,10 @@ const commonActions = [
   "Set Reminders",
   "Share Batch Progress",
 ];
+
+const formState = reactive({
+  temperature: 0,
+  pH: 0,
+  notes: "",
+});
 </script>

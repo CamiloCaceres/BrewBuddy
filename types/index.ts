@@ -1,8 +1,7 @@
-export interface KombuchaEntry {
+export interface Entry {
     date: Date;
     dateString: string;
-    fermentationStage: 'F1' | 'F2';
-    fermentationDay: number;
+    status: "pending" | "firstFermentation" | "secondFermentation" | "completed";    fermentationDay: number;
     temperature: {
       value: number;
       unit: 'celsius' | 'fahrenheit';

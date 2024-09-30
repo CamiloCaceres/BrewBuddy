@@ -9,10 +9,11 @@
         </UFormGroup>
 
         <UFormGroup label="Description">
-          <UTextarea v-model="recipe.description" placeholder="Enter recipe description" />
+          <UTextarea
+            v-model="recipe.description"
+            placeholder="Enter recipe description"
+          />
         </UFormGroup>
-
- 
 
         <h2 class="text-xl font-bold mb-2">Ingredients</h2>
 
@@ -30,7 +31,7 @@
               placeholder="Unit"
             />
             <UInput
-              v-model="recipe.sugar.type"
+              v-model="recipe.sugarType"
               placeholder="Sugar type"
               class="flex-grow"
             />
@@ -67,10 +68,10 @@
               placeholder="Unit"
             />
             <USelectMenu
-            v-model="recipe.teaType"
-            :options="teaTypes"
-            placeholder="Select a tea type"
-          />
+              v-model="recipe.teaType"
+              :options="teaTypes"
+              placeholder="Select a tea type"
+            />
           </div>
         </UFormGroup>
 
@@ -90,9 +91,9 @@
           </div>
         </UFormGroup>
 
-        <UFormGroup label="Other Ingredients">
+        <UFormGroup label="Fermentation 2 Ingredients">
           <div
-            v-for="(ingredient, index) in recipe.ingredients"
+            v-for="(ingredient, index) in recipe.F2ingredients"
             :key="index"
             class="flex space-x-2 mb-2"
           >
@@ -157,14 +158,9 @@
         <UFormGroup label="First Fermentation (days)">
           <div class="flex space-x-2">
             <UInput
-              v-model.number="recipe.fermentation.firstFermentation.minDays"
+              v-model.number="recipe.F1Days"
               type="number"
-              placeholder="Min days"
-            />
-            <UInput
-              v-model.number="recipe.fermentation.firstFermentation.maxDays"
-              type="number"
-              placeholder="Max days"
+              placeholder="F1 days"
             />
           </div>
         </UFormGroup>
@@ -172,46 +168,17 @@
         <UFormGroup label="Second Fermentation (days)">
           <div class="flex space-x-2">
             <UInput
-              v-model.number="recipe.fermentation.secondFermentation.minDays"
+              v-model.number="recipe.F2Days"
               type="number"
-              placeholder="Min days"
-            />
-            <UInput
-              v-model.number="recipe.fermentation.secondFermentation.maxDays"
-              type="number"
-              placeholder="Max days"
+              placeholder="F2 days"
             />
           </div>
         </UFormGroup>
 
         <FlavorProfile
-      :initial-flavor-profile="recipe.flavorProfile"
-      @update:flavor-profile="updateFlavorProfile"
-    />
-
-        <UFormGroup label="Difficulty">
-          <USelectMenu
-            v-model="recipe.difficulty"
-            :options="difficultyLevels"
-            placeholder="Select difficulty level"
-          />
-        </UFormGroup>
-
-        <UFormGroup label="Yield">
-          <div class="flex space-x-2">
-            <UInput
-              v-model.number="recipe.yield.amount"
-              type="number"
-              placeholder="Amount"
-              class="w-24"
-            />
-            <USelectMenu
-              v-model="recipe.yield.unit"
-              :options="units"
-              placeholder="Unit"
-            />
-          </div>
-        </UFormGroup>
+          :initial-flavor-profile="recipe.flavorProfile"
+          @update:flavor-profile="updateFlavorProfile"
+        />
 
         <UFormGroup label="Tags">
           <UInput
@@ -226,15 +193,12 @@
               class="bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
             >
               {{ tag }}
-              <button @click="removeTag(index)" class="ml-1 text-red-500">&times;</button>
+              <button @click="removeTag(index)" class="ml-1 text-red-500">
+                &times;
+              </button>
             </span>
           </div>
         </UFormGroup>
-
-        <UFormGroup label="Author">
-          <UInput v-model="recipe.author" placeholder="Enter author name" />
-        </UFormGroup>
-
         <UFormGroup>
           <div class="flex items-center">
             <UCheckbox v-model="recipe.isPublic" />
@@ -250,30 +214,32 @@
 
 <script setup lang="ts">
 import { ref, reactive } from "vue";
+import type {
+  KombuchaRecipe,
+  Ingredient,
+  BakersPercentageRecipe,
+  Unit,
+} from "@/types";
+import { usePocketBase } from "@/composables/usePocketBase";
 
-interface Ingredient {
-  name: string;
-  amount: number | undefined;
-  unit: string;
-}
+const {pb, currentUser} = usePocketBase();
 
 
-const recipe = reactive({
+const recipe: KombuchaRecipe = reactive({
   id: 1,
   name: "",
   description: "",
   teaType: "",
-  sugar: { amount: 0, unit: "grams", type: "White Sugar" },
-  ingredients: [] as Ingredient[],
+  sugar: { amount: 0, unit: "grams" },
+  sugarType: "White Sugar",
+  F2ingredients: [] as Ingredient[],
   instructions: {
     brewing: "",
     firstFermentation: "",
     secondFermentation: "",
   },
-  fermentation: {
-    firstFermentation: { minDays: 0, maxDays: 0 },
-    secondFermentation: { minDays: 0, maxDays: 0 },
-  },
+  F1Days: 7,
+  F2Days: 14,
   water: { amount: 0, unit: "ml" },
   tea: { amount: 0, unit: "grams" },
   starter: { amount: 0, unit: "ml" },
@@ -283,8 +249,6 @@ const recipe = reactive({
     bitterness: 0,
     carbonation: 0,
   },
-  difficulty: "",
-  yield: { amount: 0, unit: "liters" },
   tags: [] as string[],
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -304,20 +268,59 @@ const teaTypes = [
   "Blend",
 ];
 
-const units = ["grams", "ml", "liters", "cups", "ounces", "pieces", "leaves"];
+const units = ["grams", "ml", "liters", "cups", "ounces"];
 
-const difficultyLevels = ["Beginner", "Intermediate", "Advanced"];
+
+// Define the conversion factors
+const conversionFactors: Record<Unit, number> = {
+  ml: 1, // Assuming 1ml of water = 1g
+  liters: 1000,
+  cups: 236.588,
+  ounces: 28.3495,
+  grams: 1,
+};
+
+// Function to convert a value from one unit to grams
+function convertToGrams(value: number, unit: Unit): number {
+  const lowerCaseUnit = unit.toLowerCase() as Unit;
+  if (!(lowerCaseUnit in conversionFactors)) {
+    throw new Error(`Unsupported unit: ${unit}`);
+  }
+  return value * conversionFactors[lowerCaseUnit];
+}
+
+function convertToBakersPercentage(recipe: KombuchaRecipe): BakersPercentageRecipe {
+  // First, convert all ingredients to grams
+  const waterInGrams = convertToGrams(recipe.water.amount, recipe.water.unit);
+  const sugarInGrams = convertToGrams(recipe.sugar.amount, recipe.sugar.unit);
+  const teaInGrams = convertToGrams(recipe.tea.amount, recipe.tea.unit);
+  const starterInGrams = convertToGrams(
+    recipe.starter.amount,
+    recipe.starter.unit
+  );
+
+  // Calculate percentages based on water as 100%
+  return {
+    water: 100, // Water is always 100%
+    sugar: (sugarInGrams / waterInGrams) * 100,
+    tea: (teaInGrams / waterInGrams) * 100,
+    starter: (starterInGrams / waterInGrams) * 100,
+  };
+}
 
 const addIngredient = () => {
-  recipe.ingredients.push({ name: "", amount: 0, unit: "" });
+  recipe.F2ingredients.push({ name: "", amount: 0, unit: "grams" });
 };
 
 const removeIngredient = (index: number) => {
-  recipe.ingredients.splice(index, 1);
+  recipe.F2ingredients.splice(index, 1);
 };
 
 const addTag = () => {
-  const newTags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag !== "");
+  const newTags = tagsInput.value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag !== "");
   recipe.tags.push(...newTags);
   tagsInput.value = "";
 };
@@ -326,16 +329,42 @@ const removeTag = (index: number) => {
   recipe.tags.splice(index, 1);
 };
 
-const updateFlavorProfile = (newFlavorProfile: { sweetness: number; acidity: number; bitterness: number; carbonation: number }) => {
+const updateFlavorProfile = (newFlavorProfile: {
+  sweetness: number;
+  acidity: number;
+  bitterness: number;
+  carbonation: number;
+}) => {
   recipe.flavorProfile = newFlavorProfile;
 };
 
-const handleSubmit = () => {
+
+function prepareRecipeForSubmission(recipe: KombuchaRecipe) {
+  const bakersPercentage = convertToBakersPercentage(recipe);
+  
+  return {
+    name: recipe.name,
+    description: recipe.description,
+    author: currentUser.value?.id, // Assuming the user is logged in
+    sugar: bakersPercentage.sugar,
+    sugarType: recipe.sugarType,
+    water: bakersPercentage.water,
+    starter: bakersPercentage.starter,
+    teaType: recipe.teaType,
+    flavorProfile: JSON.stringify(recipe.flavorProfile),
+    F1Days: recipe.F1Days,
+    F2Days: recipe.F2Days,
+    ingredients: JSON.stringify(recipe.F2ingredients),
+    isPublic: recipe.isPublic,
+  };
+}
+
+const handleSubmit = async () => {
   // Validate form
   if (
     !recipe.name ||
     !recipe.description ||
-    recipe.ingredients.some((i) => !i.name || !i.amount || !i.unit) ||
+    recipe.F2ingredients.some((i) => !i.name || !i.amount || !i.unit) ||
     !recipe.instructions.brewing ||
     !recipe.instructions.firstFermentation ||
     !recipe.instructions.secondFermentation
@@ -348,7 +377,21 @@ const handleSubmit = () => {
   recipe.updatedAt = new Date();
 
   // Send this data to backend
-  console.log("New recipe:", recipe);
-  // Reset form or navigate to the new recipe view
+
+  try {
+    const preparedRecipe = prepareRecipeForSubmission(recipe);
+    
+    // Send data to PocketBase
+    const record = await pb.collection('recipie').create(preparedRecipe);
+    
+    console.log('Recipe created:', record);
+    
+    // Reset form or navigate to the new recipe view
+    navigateTo(`/recipes/${record.id}`);
+  } catch (error) {
+    console.error('Error creating recipe:', error);
+    alert('An error occurred while saving the recipe. Please try again.');
+  }
+
 };
 </script>

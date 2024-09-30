@@ -118,6 +118,7 @@ const links = [
   { name: 'Dashboard', path: '/dashboard', icon: 'i-heroicons-home' },
   { name: 'Batches', path: '/batches', icon: 'i-heroicons-beaker' },
   { name: 'Recipes', path: '/recipes', icon: 'i-heroicons-book-open' },
+  { name: 'Blog', path: '/blog', icon: 'i-heroicons-newspaper' },
 /*   { name: 'Community', path: '/community', icon: 'i-heroicons-users' },
  */]
 

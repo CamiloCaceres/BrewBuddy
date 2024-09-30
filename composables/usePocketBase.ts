@@ -10,6 +10,8 @@ export function usePocketBase() {
   }
 
   const pb = new PocketBase(pocketbaseUrl)
+
+  //Auth
   const currentUser = ref(pb.authStore.model)
 
   pb.authStore.onChange((auth) => {
@@ -32,10 +34,46 @@ export function usePocketBase() {
     pb.authStore.clear()
   }
 
+// Blog posts
+const getPostBySlug = async (slug: string) => {
+  try {
+    const record = await pb.collection('posts').getFirstListItem(`slug="${slug}"`, {
+      expand: 'author'
+    });
+    return record;
+  } catch (error) {
+    console.error('Error fetching post by slug:', error);
+    throw error;
+  }
+}
+const getAllPosts = async () => {
+  try {
+    const records = await pb.collection('posts').getFullList({
+      sort: '-created',
+      filter: 'is_published = true',
+      expand: 'author',
+      
+    });
+    return records;
+  } catch (error) {
+    console.error('Error fetching all posts:', error);
+    throw error;
+  }
+}
+const getImageUrl = (item: any) => {
+  if (item && item.image) {
+    return pb.files.getUrl(item, item.image, { thumb: "800x0" });
+  }
+  return "";
+};
+
   return {
     pb,
     currentUser,
     loginWithGoogle,
-    logout
+    logout,
+    getPostBySlug,
+    getAllPosts,
+    getImageUrl
   }
 }

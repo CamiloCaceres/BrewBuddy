@@ -131,6 +131,14 @@
         </UFormGroup>
 
         <h2 class="text-xl font-bold mb-2">Instructions</h2>
+        <UButton
+          block
+          variant="outline"
+          @click="addStandardInstructions"
+          class="w-full mb-2"
+        >
+          Use Standard Instructions
+        </UButton>
 
         <UFormGroup label="Brewing">
           <UTextarea
@@ -222,8 +230,7 @@ import type {
 } from "@/types";
 import { usePocketBase } from "@/composables/usePocketBase";
 
-const {pb, currentUser} = usePocketBase();
-
+const { pb, currentUser } = usePocketBase();
 
 const recipe: KombuchaRecipe = reactive({
   id: 1,
@@ -270,7 +277,6 @@ const teaTypes = [
 
 const units = ["grams", "ml", "liters", "cups", "ounces"];
 
-
 // Define the conversion factors
 const conversionFactors: Record<Unit, number> = {
   ml: 1, // Assuming 1ml of water = 1g
@@ -289,7 +295,9 @@ function convertToGrams(value: number, unit: Unit): number {
   return value * conversionFactors[lowerCaseUnit];
 }
 
-function convertToBakersPercentage(recipe: KombuchaRecipe): BakersPercentageRecipe {
+function convertToBakersPercentage(
+  recipe: KombuchaRecipe
+): BakersPercentageRecipe {
   // First, convert all ingredients to grams
   const waterInGrams = convertToGrams(recipe.water.amount, recipe.water.unit);
   const sugarInGrams = convertToGrams(recipe.sugar.amount, recipe.sugar.unit);
@@ -307,6 +315,18 @@ function convertToBakersPercentage(recipe: KombuchaRecipe): BakersPercentageReci
     starter: (starterInGrams / waterInGrams) * 100,
   };
 }
+
+const addStandardInstructions = () => {
+  recipe.instructions.brewing = `1. Brew tea for 10-15 minutes. 
+2. Add sugar and stir until dissolved. 
+3. Allow to cool to room temperature.`;
+  recipe.instructions.firstFermentation = `1. Add SCOBY and starter tea to the cooled sweet tea. 
+2. Cover with a breathable cloth. 
+3. Let ferment for 7-10 days at room temperature.`;
+  recipe.instructions.secondFermentation = `1. Remove SCOBY and transfer kombucha to bottles. 
+2. Add flavoring if desired. 
+3. Seal bottles and let ferment for 1-3 days at room temperature.`;
+};
 
 const addIngredient = () => {
   recipe.F2ingredients.push({ name: "", amount: 0, unit: "grams" });
@@ -338,10 +358,9 @@ const updateFlavorProfile = (newFlavorProfile: {
   recipe.flavorProfile = newFlavorProfile;
 };
 
-
 function prepareRecipeForSubmission(recipe: KombuchaRecipe) {
   const bakersPercentage = convertToBakersPercentage(recipe);
-  
+
   return {
     name: recipe.name,
     description: recipe.description,
@@ -354,7 +373,7 @@ function prepareRecipeForSubmission(recipe: KombuchaRecipe) {
     flavorProfile: JSON.stringify(recipe.flavorProfile),
     F1Days: recipe.F1Days,
     F2Days: recipe.F2Days,
-    ingredients: JSON.stringify(recipe.F2ingredients),
+    F2ingredients: JSON.stringify(recipe.F2ingredients),
     isPublic: recipe.isPublic,
   };
 }
@@ -376,22 +395,20 @@ const handleSubmit = async () => {
   // Update timestamps
   recipe.updatedAt = new Date();
 
-  // Send this data to backend
-
+  // Send data to backend
   try {
     const preparedRecipe = prepareRecipeForSubmission(recipe);
-    
-    // Send data to PocketBase
-    const record = await pb.collection('recipie').create(preparedRecipe);
-    
-    console.log('Recipe created:', record);
-    
-    // Reset form or navigate to the new recipe view
+
+    //PocketBase
+    const record = await pb.collection("recipes").create(preparedRecipe);
+
+    console.log("Recipe created:", record);
+
+    // Navigate to the new recipe view
     navigateTo(`/recipes/${record.id}`);
   } catch (error) {
-    console.error('Error creating recipe:', error);
-    alert('An error occurred while saving the recipe. Please try again.');
+    console.error("Error creating recipe:", error);
+    alert("An error occurred while saving the recipe. Please try again.");
   }
-
 };
 </script>

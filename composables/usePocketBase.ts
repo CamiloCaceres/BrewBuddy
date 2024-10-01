@@ -60,6 +60,31 @@ const getAllPosts = async () => {
     throw error;
   }
 }
+const getRecipeById = async (id: string) => {
+  try {
+    const record = await pb.collection('recipes').getOne(id, {
+      expand: 'author'
+    });
+    return record;
+  } catch (error) {
+    console.error('Error fetching recipe by ID:', error);
+    throw error;
+  }
+}
+const getAllRecipes = async () => {
+  try {
+    const records = await pb.collection('recipes').getFullList({
+      sort: '-created',
+      filter: 'isPublic = true',
+      expand: 'author',
+    });
+    return records;
+  } catch (error) {
+    console.error('Error fetching all recipes:', error);
+    throw error;
+  }
+}
+
 const getImageUrl = (item: any) => {
   if (item && item.image) {
     return pb.files.getUrl(item, item.image, { thumb: "800x0" });
@@ -74,6 +99,8 @@ const getImageUrl = (item: any) => {
     logout,
     getPostBySlug,
     getAllPosts,
-    getImageUrl
+    getImageUrl,
+    getRecipeById,
+    getAllRecipes
   }
 }

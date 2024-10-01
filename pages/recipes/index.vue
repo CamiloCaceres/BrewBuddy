@@ -17,7 +17,11 @@
   
         <UDivider class="my-4" />
   
-        <div v-if="recipes.length" class="space-y-4 sm:space-y-6 relative">
+        <div v-if="loading" class="space-y-4 sm:space-y-6">
+          <USkeleton v-for="i in 3" :key="i" class="h-32 w-full" />
+        </div>
+  
+        <div v-else-if="recipes.length" class="space-y-4 sm:space-y-6 relative">
           <UCard v-for="recipe in recipes" :key="recipe.id" class="p-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
               <div class="w-full sm:w-3/4">
@@ -26,14 +30,14 @@
               </div>
               <UBadge :color="getTeaTypeColor(recipe.teaType)" class="absolute top-2 md:top-4 right-2 md:right-4">{{ recipe.teaType }}</UBadge>
             </div>
-            <div class="mt-4 flex flex-col justify-between items-start  text-sm space-y-2 sm:space-y-0">
+            <div class="mt-4 flex flex-col justify-between items-start text-sm space-y-2 sm:space-y-0">
               <p>
                 Fermentation time: {{ recipe.F1Days + recipe.F2Days }} days
               </p>
               <p class="text-gray-500 text-xs sm:text-sm">
                 By {{ recipe.expand?.author.name }} | Updated: {{ formatDate(recipe.updated) }}
               </p>
-              <UButton variant="outline" to="/recipes/{{ recipe.id }}" class="ml-auto translate-y-4 md:translate-y-0">View Recipe</UButton>
+              <UButton variant="outline" :to="`/recipes/${recipe.id}`" class="ml-auto translate-y-4 md:translate-y-0">View Recipe</UButton>
             </div>
           </UCard>
         </div>
@@ -61,9 +65,17 @@
   const { getAllRecipes } = usePocketBase();
   
   const recipes = ref([]);
+  const loading = ref(true);
   
   onMounted(async () => {
-    recipes.value = await getAllRecipes();
+    try {
+      recipes.value = await getAllRecipes();
+    } catch (error) {
+      console.error('Failed to fetch recipes:', error);
+      // Handle error (e.g., show error message to user)
+    } finally {
+      loading.value = false;
+    }
   });
   
   const getTeaTypeColor = (teaType) => {

@@ -80,7 +80,8 @@ export interface KombuchaRecipe {
   createdAt: Date;
   updatedAt: Date;
   ratings: Ratings;
-  author: string;
+  expand?: {author: {name: string}};
+  author?: string
   isPublic: boolean;
 }
 export interface BakersPercentageRecipe {

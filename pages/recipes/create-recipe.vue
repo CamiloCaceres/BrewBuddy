@@ -260,7 +260,7 @@ const recipe: KombuchaRecipe = reactive({
   createdAt: new Date(),
   updatedAt: new Date(),
   ratings: { averageRating: 0, numberOfRatings: 0 },
-  author: "",
+    author: "",
   isPublic: false,
 });
 
@@ -369,6 +369,7 @@ function prepareRecipeForSubmission(recipe: KombuchaRecipe) {
     sugarType: recipe.sugarType,
     water: bakersPercentage.water,
     starter: bakersPercentage.starter,
+    tea: bakersPercentage.tea,
     teaType: recipe.teaType,
     flavorProfile: JSON.stringify(recipe.flavorProfile),
     F1Days: recipe.F1Days,

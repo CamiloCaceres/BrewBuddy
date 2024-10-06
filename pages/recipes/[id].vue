@@ -1,15 +1,31 @@
 <template>
   <UContainer class="py-8 max-w-4xl">
-    <UCard>
+    <div v-if="isPending">
+      <UProgress indeterminate />
+    </div>
+    <div v-else-if="isError">
+      <div>
+        <p>Error: {{ error }}</p>
+      </div>
+    </div>
+    <UCard v-else>
       <template #header>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {{ recipe.name }}
-            </h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ recipe.teaType }}
-            </p>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {{ data?.name }}
+              </h1>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ data?.teaType }}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <UButton :to="`/batches/create/${data?.id}`"
+              >Create Batch from this recipe</UButton
+            >
           </div>
         </div>
       </template>
@@ -28,8 +44,7 @@
         Fermentation 1 Ingredients
       </h2>
       <UTable :columns="columns" :rows="recipeDetails" />
-      <div v-if="recipe.F2ingredients">
-
+      <div v-if="data?.F2ingredients">
         <h2 class="text-lg font-semibold my-4 dark:text-gray-200">
           Fermentation 2 Ingredients
         </h2>
@@ -43,11 +58,11 @@
           </h2>
           <p class="text-sm text-gray-600 dark:text-gray-300 p-1">
             <span class="font-semibold text-md">F1:</span>
-            {{ recipe.F1Days }} days
+            {{ data?.F1Days }} days
           </p>
           <p class="text-sm text-gray-600 dark:text-gray-300 p-1">
             <span class="font-semibold text-md">F2:</span>
-            {{ recipe.F2Days }} days
+            {{ data?.F2Days }} days
           </p>
         </div>
         <div>
@@ -55,27 +70,31 @@
             Description
           </h3>
           <p class="text-sm text-gray-600 dark:text-gray-300 p-1">
-            {{ recipe.description }}
+            {{ data?.description }}
           </p>
         </div>
         <div>
           <h3 class="text-lg font-semibold mt-4 mb-2 dark:text-gray-200">
             Flavor Profile:
           </h3>
-          <div v-if="flavorProfile" class="flex flex-row gap-4">
+          <div v-if="data?.flavorProfile" class="flex flex-row gap-4">
             <UMeter
-              :value="flavorProfile.sweetness"
+              :value="data?.flavorProfile.sweetness"
               :max="10"
               label="Sweetness"
             />
-            <UMeter :value="flavorProfile.acidity" :max="10" label="Acidity" />
             <UMeter
-              :value="flavorProfile.bitterness"
+              :value="data?.flavorProfile.acidity"
+              :max="10"
+              label="Acidity"
+            />
+            <UMeter
+              :value="data?.flavorProfile.bitterness"
               :max="10"
               label="Bitterness"
             />
             <UMeter
-              :value="flavorProfile.carbonation"
+              :value="data?.flavorProfile.carbonation"
               :max="10"
               label="Carbonation"
             />
@@ -86,10 +105,10 @@
             Additional Information
           </h3>
           <p class="text-sm text-gray-600 dark:text-gray-300 p-1">
-            <strong>Author:</strong> {{ recipe.expand?.author.name }}
+            <strong>Author:</strong> {{ data?.expand?.author.name }}
           </p>
           <p class="text-sm text-gray-600 dark:text-gray-300 p-1">
-            <strong>Public:</strong> {{ recipe.isPublic ? "Yes" : "No" }}
+            <strong>Public:</strong> {{ data?.isPublic ? "Yes" : "No" }}
           </p>
         </div>
       </div>
@@ -101,36 +120,21 @@
 import { reactive, ref, computed, onMounted } from "vue";
 import { usePocketBase } from "@/composables/usePocketBase";
 import type { KombuchaRecipe, Ingredient, FlavorProfile } from "@/types";
+import { useQuery } from "@tanstack/vue-query";
 
 const { getRecipeById } = usePocketBase();
-const recipe = ref<KombuchaRecipe>({} as KombuchaRecipe);
-const flavorProfile = ref<FlavorProfile | null>(null);
-const ingredients = ref<Ingredient[]>([]);
 
 const route = useRoute();
 const recipeId = route.params.id as string;
 
-onMounted(async () => {
-  const fetchedRecipe = await getRecipeById(recipeId);
-  // Parse JSON fields
-  fetchedRecipe.flavorProfile = fetchedRecipe.flavorProfile;
-
-  fetchedRecipe.ingredients = fetchedRecipe.ingredients;
-
-  // Convert number fields to IngredientWithAmount objects
-  fetchedRecipe.sugar = { amount: fetchedRecipe.sugar, unit: "g" };
-  fetchedRecipe.water = { amount: fetchedRecipe.water, unit: "g" };
-  fetchedRecipe.starter = { amount: fetchedRecipe.starter, unit: "g" };
-  fetchedRecipe.tea = { amount: fetchedRecipe.tea, unit: "g" };
-
-  recipe.value = fetchedRecipe as unknown as KombuchaRecipe;
-  flavorProfile.value = recipe.value.flavorProfile;
-  ingredients.value = recipe.value.F2ingredients;
+const { isPending, isError, data, error } = useQuery({
+  queryKey: ["recipe"],
+  queryFn: () => getRecipeById(recipeId),
 });
 
 const desiredYield = ref(1000); // Default yield of 1000g
 const selectedUnit = ref("g");
-const unitOptions = ["g", "kg", "oz", "lb"];
+const unitOptions = ["g", "liters", "oz", "lb"];
 
 const columns = [
   { key: "label", label: "Ingredient" },
@@ -140,27 +144,51 @@ const columns = [
 
 const conversionFactors = {
   g: 1,
-  kg: 0.001,
-  oz: 0.035274,
-  lb: 0.00220462,
+  liters: 1000, // 1 liter of water weighs 1000g
+  oz: 28.3495,
+  lb: 453.592,
 };
 
 const convertUnit = (value: number, fromUnit: string, toUnit: string) => {
   const gramsValue =
-    value / conversionFactors[fromUnit as keyof typeof conversionFactors];
+    value * conversionFactors[fromUnit as keyof typeof conversionFactors];
   return (
-    gramsValue * conversionFactors[toUnit as keyof typeof conversionFactors]
+    gramsValue / conversionFactors[toUnit as keyof typeof conversionFactors]
   );
 };
 
+const ingredientWithAmount = computed(() => {
+  return {
+    sugar: {
+      amount: data.value?.sugar,
+      unit: "grams",
+    },
+    water: {
+      amount: data.value?.water,
+      unit: "ml",
+    },
+    starter: {
+      amount: data.value?.starter,
+      unit: "grams",
+    },
+    tea: {
+      amount: data.value?.tea,
+      unit: "grams",
+    },
+  };
+});
+
 const recipeDetails = computed(() => {
-  if (!recipe.value.sugar || !recipe.value.water || !recipe.value.starter)
+  if (!data.value?.sugar || !data.value?.water || !data.value?.starter)
     return [];
 
   const waterAmount = desiredYield.value;
-  const sugarAmount = (recipe.value.sugar.amount / 100) * waterAmount;
-  const starterAmount = (recipe.value.starter.amount / 100) * waterAmount;
-  const teaAmount = (recipe.value.tea.amount / 100) * waterAmount;
+  const sugarAmount =
+    (ingredientWithAmount.value?.sugar.amount / 100) * waterAmount;
+  const starterAmount =
+    (ingredientWithAmount.value?.starter.amount / 100) * waterAmount;
+  const teaAmount =
+    (ingredientWithAmount.value?.tea.amount / 100) * waterAmount;
 
   return [
     {
@@ -171,21 +199,20 @@ const recipeDetails = computed(() => {
     {
       label: "Sugar",
       amount: `${formatAmount(sugarAmount, "g", selectedUnit.value)} (${
-        recipe.value.sugarType
+        data.value?.sugarType
       })`,
-      percentage: `${recipe.value.sugar.amount.toFixed(2)}%`,
+      percentage: `${ingredientWithAmount.value?.sugar.amount.toFixed(2)}%`,
     },
     {
       label: "Starter",
       amount: formatAmount(starterAmount, "g", selectedUnit.value),
-      percentage: `${recipe.value.starter.amount.toFixed(2)}%`,
+      percentage: `${ingredientWithAmount.value?.starter.amount.toFixed(2)}%`,
     },
     {
-      label: `${recipe.value.teaType}`,
+      label: `${data.value?.teaType}`,
       amount: formatAmount(teaAmount, "g", selectedUnit.value),
-      percentage: `${recipe.value.tea.amount.toFixed(2)}%`,
+      percentage: `${ingredientWithAmount.value?.tea.amount.toFixed(2)}%`,
     },
-
   ];
 });
 
@@ -196,9 +223,9 @@ const f2Columns = [
 ];
 
 const f2Ingredients = computed(() => {
-  if (!recipe.value.F2ingredients) return [];
+  if (!data.value?.F2ingredients) return [];
 
-  return recipe.value.F2ingredients.map((ingredient: Ingredient) => ({
+  return data.value?.F2ingredients.map((ingredient: Ingredient) => ({
     name: ingredient.name,
     amount: formatAmount(
       ingredient.amount,

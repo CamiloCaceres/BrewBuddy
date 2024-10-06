@@ -1,5 +1,4 @@
 <template>
-  <div class="container mx-auto p-6 max-w-2xl">
     <h1 class="text-3xl font-bold mb-6">Add New Recipe</h1>
 
     <form @submit.prevent="handleSubmit">
@@ -217,7 +216,6 @@
         <UButton type="submit" block>Add Recipe</UButton>
       </div>
     </form>
-  </div>
 </template>
 
 <script setup lang="ts">

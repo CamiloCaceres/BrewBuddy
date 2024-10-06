@@ -1,5 +1,4 @@
 <template>
-  <UContainer class="py-8 max-w-4xl">
     <div v-if="isPending">
       <UProgress indeterminate />
     </div>
@@ -8,7 +7,7 @@
         <p>Error: {{ error }}</p>
       </div>
     </div>
-    <UCard v-else>
+    <UCard class="mt-4" v-else>
       <template #header>
         <div class="flex justify-between items-center">
           <div>
@@ -35,6 +34,7 @@
           type="number"
           min="0"
           step="100"
+          
         />
       </UFormGroup>
       <UFormGroup label="Unit" class="mb-4">
@@ -113,7 +113,6 @@
         </div>
       </div>
     </UCard>
-  </UContainer>
 </template>
 
 <script setup lang="ts">
@@ -223,8 +222,6 @@ const f2Columns = [
 ];
 
 const f2Ingredients = computed(() => {
-  if (!data.value?.F2ingredients) return [];
-
   return data.value?.F2ingredients.map((ingredient: Ingredient) => ({
     name: ingredient.name,
     amount: formatAmount(

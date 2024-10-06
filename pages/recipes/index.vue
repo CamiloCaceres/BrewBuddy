@@ -1,5 +1,4 @@
 <template>
-  <UContainer class="px-4 sm:px-6 lg:px-8">
     <UCard class="my-4 sm:my-8">
       <template #header>
         <div
@@ -71,7 +70,6 @@
       class="fixed right-4 bottom-4 shadow-lg sm:hidden"
       aria-label="Create Recipe"
     />
-  </UContainer>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <header class="px-4 py-4 bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
+  <header class="px-4 py-4 bg-white dark:bg-gray-800 shadow-md transition-colors duration-300">
     <nav class="container mx-auto flex justify-between items-center">
       <NuxtLink to="/" class="text-2xl font-bold text-purple-600 dark:text-purple-400 transition-colors duration-300 flex items-center">
 <!--         <img src="/api/placeholder/32/32" alt="KombuchaTrack Logo" class="h-8 w-8 mr-2" />

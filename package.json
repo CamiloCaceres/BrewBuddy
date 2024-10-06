@@ -16,6 +16,7 @@
     "nuxt": "^3.12.4"
   },
   "dependencies": {
+    "@tanstack/vue-query": "^5.59.1",
     "date-fns": "^4.1.0",
     "pocketbase": "^0.21.5",
     "v-calendar": "^3.1.2",

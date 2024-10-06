@@ -1,6 +1,6 @@
 <template>
     <UButton @click="openModal">Add Entry</UButton>
-    <UModal v-model="isOpen" >
+    <UModal :fullscreen="$device.isMobile" v-model="isOpen" >
       <UCard>
         <template #header>
           <div class="flex justify-between items-center">

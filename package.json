@@ -16,6 +16,7 @@
     "nuxt": "^3.12.4"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.2",
     "@tanstack/vue-query": "^5.59.1",
     "date-fns": "^4.1.0",
     "pocketbase": "^0.21.5",

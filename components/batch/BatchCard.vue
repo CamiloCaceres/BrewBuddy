@@ -27,14 +27,18 @@
        
         </div>
         <div>
-          <h4 class="text-sm font-semibold mb-2">Journal</h4>
+          <h4 class="text-sm font-semibold mb-2">Entries</h4>
         </div>
+      </div>
+      <div class="flex justify-end">
+        <UButton :to="`/batches/${batch.slug}`">View Batch</UButton>
       </div>
     </div>
   </UCard>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import StageBadge from "@/components/batch/StageBadge.vue";
 const props = defineProps({
   batch: {
     type: Object,
@@ -46,13 +50,17 @@ const props = defineProps({
 const currentFermentationDay = computed(() => {
   const startDate = new Date(props.batch.start_date);
   const currentDate = new Date();
+  if (isNaN(startDate.getTime())) {
+    return 0; // Return 0 if the start date is invalid
+  }
   const timeDifference = currentDate.getTime() - startDate.getTime();
-  const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24));
-  return daysDifference;
+  return Math.max(0, Math.floor(timeDifference / (1000 * 3600 * 24)));
 });
 // Computes the fermentation progress as a percentage based on the current fermentation day and total fermentation days.
 const totalFermentationDays = computed(() => {
-  return (props.batch.expand?.recipe?.F1Days ) + (props.batch.expand?.recipe?.F2Days);
+  const f1Days = props.batch.expand?.recipe?.F1Days || 0;
+  const f2Days = props.batch.expand?.recipe?.F2Days || 0;
+  return Math.max(1, f1Days + f2Days); // Ensure it's at least 1 to avoid division by zero
 });
 
 </script>

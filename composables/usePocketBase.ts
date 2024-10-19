@@ -113,7 +113,9 @@ const getAllBatches = async () => {
 }
 const getBatchBySlug = async (slug: string) => {
   try {
-    const record = await pb.collection('batches').getFirstListItem(`slug="${slug}"`);
+    const record = await pb.collection('batches').getFirstListItem(`slug="${slug}"`, {
+      expand: 'recipe'
+    });
     return record;
   } catch (error) {
     console.error('Error fetching batch by slug:', error);
@@ -126,6 +128,15 @@ const postBatch = async (batch: any) => {
     return record;
   } catch (error) {
     console.error('Error posting batch:', error);
+    throw error;
+  }
+}
+const updateBatch = async (id: string, batch: any) => {
+  try {
+    const record = await pb.collection('batches').update(id, batch);
+    return record;
+  } catch (error) {
+    console.error('Error updating batch:', error);
     throw error;
   }
 }
@@ -149,6 +160,8 @@ const getImageUrl = (item: any) => {
     getRecipeById,
     getAllRecipes,
     getAllRecipesFiltered,
-    postBatch
+    postBatch,
+    getBatchBySlug,
+    updateBatch
   }
 }

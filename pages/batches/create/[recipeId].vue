@@ -200,9 +200,10 @@ const batchForUpload = computed(() => {
     f2_vessel: formState.f2Vessel,
     initial_PH: formState.initialPH,
     initial_temperature: formState.initialTemperature,
-    brew_type: formState.batchType,
+    brew_method: formState.batchType,
     stage: "pending",
     name: formState.name,
+    is_discarded: false,
   };
 });
 // need to validate all data, and check if user is logged in

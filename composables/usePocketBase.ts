@@ -10,6 +10,7 @@ export function usePocketBase() {
   }
 
   const pb = new PocketBase(pocketbaseUrl)
+  pb.autoCancellation(false)
 
   //Auth
   const currentUser = ref(pb.authStore.model)
@@ -60,6 +61,7 @@ const getAllPosts = async () => {
     throw error;
   }
 }
+//Recipes
 const getRecipeById = async (id: string) => {
   try {
     const record = await pb.collection('recipes').getOne(id, {
@@ -85,6 +87,50 @@ const getAllRecipes = async () => {
   }
 }
 
+const getAllRecipesFiltered = async () => {
+  try {
+    const records = await pb.collection('recipes').getFullList({
+      sort: '-created',
+      fields: 'name, isPublic, id',
+      filter: 'isPublic = true'
+    });
+    return records;
+  } catch (error) {
+    console.error('Error fetching all recipes:', error);
+    throw error;
+  }
+}
+
+//Batches
+const getAllBatches = async () => {
+  try {
+    const records = await pb.collection('batches').getFullList();
+    return records;
+  } catch (error) {
+    console.error('Error fetching all batches:', error);
+    throw error;
+  }
+}
+const getBatchBySlug = async (slug: string) => {
+  try {
+    const record = await pb.collection('batches').getFirstListItem(`slug="${slug}"`);
+    return record;
+  } catch (error) {
+    console.error('Error fetching batch by slug:', error);
+    throw error;
+  }
+}
+const postBatch = async (batch: any) => {
+  try {
+    const record = await pb.collection('batches').create(batch);
+    return record;
+  } catch (error) {
+    console.error('Error posting batch:', error);
+    throw error;
+  }
+}
+
+
 const getImageUrl = (item: any) => {
   if (item && item.image) {
     return pb.files.getUrl(item, item.image, { thumb: "800x0" });
@@ -101,6 +147,8 @@ const getImageUrl = (item: any) => {
     getAllPosts,
     getImageUrl,
     getRecipeById,
-    getAllRecipes
+    getAllRecipes,
+    getAllRecipesFiltered,
+    postBatch
   }
 }

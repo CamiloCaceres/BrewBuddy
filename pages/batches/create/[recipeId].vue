@@ -11,10 +11,11 @@
           placeholder="Enter a name for this batch"
         />
       </UFormGroup>
-     <div v-if="recipe" class="flex justify-between items-center">
-      <h1>Recipe used: {{ recipe?.name }}</h1>
-      <UButton target="_blank" :to="`/recipes/${recipe.id}`">View Recipe</UButton>
+     <div class="flex justify-between items-center">
+      <h1>Recipe used: {{ recipe ? recipe.name : "" }}</h1>
+      <UButton :loading="!recipe" target="_blank" :to="`/recipes/${$route.params.recipeId}`">View Recipe</UButton>
      </div>
+
 
      <UFormGroup label="Start Date" name="startDate">
        <UInput type="date" v-model="formState.startDate" />
@@ -84,10 +85,18 @@
         />
       </UFormGroup>
 
-      <div v-auto-animate class="mb-4">
+      <div v-auto-animate class="mb-4 flex flex-col gap-2">
         <h2 class="text-xl font-semibold mb-2">Fermentation Timeline</h2>
-        <p v-if="expected_f1_end_date" class="mb-2">First Fermentation End Date: {{ expected_f1_end_date }}</p>
-        <p v-if="expected_f2_end_date" class="mb-2">Second Fermentation End Date: {{ expected_f2_end_date }}</p>
+        <div class="flex gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 bg-green-500 rounded-full"></span> <span class="font-semibold">F1</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 bg-blue-500 rounded-full"></span> <span class="font-semibold">F2</span>
+          </div>
+        </div>
+
+        <VCalendar v-if="formState.startDate" :attributes="attributes" />
       </div>
 
       <UButton type="submit">Create Batch</UButton>
@@ -108,7 +117,6 @@ const recipeId = ref(route.params.recipeId);
 // Assuming you're passing the recipe as a prop or getting it from a store
 const recipe = ref();
 
-const recipeList = ref();
 
 onMounted(async () => {
 
@@ -138,24 +146,33 @@ const formState = reactive({
 });
 
 const expected_f1_end_date = computed(() => {
-  if (!formState.startDate || !recipe.value) return undefined;
+  if (!formState.startDate || !recipe.value) return null;
   const startDate = new Date(formState.startDate);
-  const endDate = new Date(
-    startDate.getTime() + recipe.value.F1Days * 24 * 60 * 60 * 1000
-  );
-  return endDate.toLocaleDateString();
+  return new Date(startDate.getTime() + recipe.value.F1Days * 24 * 60 * 60 * 1000);
 });
 
 const expected_f2_end_date = computed(() => {
-  if (!formState.startDate || !recipe.value) return undefined;
+  if (!formState.startDate || !recipe.value) return null;
   const startDate = new Date(formState.startDate);
-  const f1Days = recipe.value.F1Days;
-  const f2Days = recipe.value.F2Days;
-  const endDate = new Date(
-    startDate.getTime() + (f1Days + f2Days) * 24 * 60 * 60 * 1000
-  );
-  return endDate.toLocaleDateString();
+  const totalDays = recipe.value.F1Days + recipe.value.F2Days;
+  return new Date(startDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
 });
+
+const attributes = computed(() => {
+  if (!formState.startDate || !expected_f1_end_date.value || !expected_f2_end_date.value) return [];
+
+  return [
+    {
+      highlight: 'green',
+      dates: { start: new Date(formState.startDate), end: expected_f1_end_date.value },
+    },
+    {
+      highlight: 'blue',
+      dates: { start: expected_f1_end_date.value, end: expected_f2_end_date.value },
+    }
+  ];
+});
+
 
 const createBatch = () => {
   if (!recipe.value) return "No recipe selected";
@@ -191,3 +208,4 @@ const createBatch = () => {
   router.push(`/batch/${newBatch.recipeId}`);
 };
 </script>
+

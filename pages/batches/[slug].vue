@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading">
+  <div v-if="isPending">
     <h1>Loading...</h1>
   </div>
   <div v-else-if="isError">
@@ -7,15 +7,13 @@
   </div>
   <div v-else>
     <h1 class="text-3xl font-bold my-6">{{ batch.name }}</h1>
-    <UCard>
+    <UCard class="mb-6">
       <template #header>
         <div class="flex justify-between items-center">
           <h2 class="text-xl font-semibold">
             Current Stage: {{ getCurrentStageName(batch.stage) }}
           </h2>
-          <UBadge :color="getStatusColor(batch.stage)">{{
-            batch.stage
-          }}</UBadge>
+          <BatchSettings />
         </div>
       </template>
       <div class="space-y-4">
@@ -23,8 +21,13 @@
           Current Day:
           {{ currentFermentationDay ? currentFermentationDay : "0" }}
         </p>
-        <UProgress :value="fermentationProgress" color="primary" />
-        <p>{{ fermentationProgressText }}</p>
+        <FermentationProgress
+          :currentDay="currentFermentationDay"
+          :totalDays="totalFermentationDays"
+          :stage="batch.stage"
+          :f1Days="batch.expand?.recipe?.F1Days"
+          :f2Days="batch.expand?.recipe?.F2Days"
+        />
 
         <div class="flex space-x-2">
           <UButton
@@ -37,7 +40,7 @@
             >Discard Batch</UButton
           >
           <UButton
-            v-if="batch.stage !== 'completed'"
+            v-if="batch.stage !== 'completed' && batch.stage !== 'discarded'"
             :loading="isUpdatingBatch"
             @click="moveToNextStage"
             >{{ getNextStageName(batch.stage) }}</UButton
@@ -49,38 +52,66 @@
 
     <UCard>
       <template #header>
-        <h3 class="text-lg font-semibold">Batch Information</h3>
+        <h3 class="text-xl font-semibold">Batch Information</h3>
       </template>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <p>
-            Start Date:
-            {{ batch.start_date ? batch.start_date : "Start Date Not Set" }}
+          <p class="capitalize font-semibold">
+            Brew Method:
+            <span class="font-normal">{{ batch.brew_method }}</span>
           </p>
-          <p class="capitalize">Batch Type: {{ batch.brew_type }}</p>
-          <p>Tracking Vessel: {{ batch.is_tracking_vessel ? "Yes" : "No" }}</p>
           <div v-if="batch.is_tracking_vessel">
-            <p>First Fermentation Vessel: {{ batch.f1_vessel }}</p>
-            <p>Second Fermentation Vessel: {{ batch.f2_vessel }}</p>
+            <p class="font-semibold">
+              First Fermentation Vessel:
+              <span class="font-normal">{{ batch.f1_vessel }}</span>
+            </p>
+            <p class="font-semibold">
+              Second Fermentation Vessel:
+              <span class="font-normal">{{ batch.f2_vessel }}</span>
+            </p>
+          </div>
+          <div v-if="batch.is_tracking_temperature">
+            <p class="font-semibold">
+              Initial Temperature:
+              <span class="font-normal">{{ batch.initial_temperature }}</span>
+            </p>
+          </div>
+          <div v-if="batch.is_tracking_ph">
+            <p class="font-semibold">
+              Initial pH:
+              <span class="font-normal">{{ batch.initial_ph }}</span>
+            </p>
           </div>
         </div>
+
         <div>
-          <p>
-            Tracking Temperature:
-            {{ batch.is_tracking_temperature ? "Yes" : "No" }}
+          <p class="font-semibold">
+            Tracking Vessel:
+            <span class="font-normal">{{
+              batch.is_tracking_vessel ? "Yes" : "No"
+            }}</span>
           </p>
-          <p>Tracking pH: {{ batch.is_tracking_PH ? "Yes" : "No" }}</p>
-          <div v-if="batch.start_date">
-            <p>
-              Expected F1 End Date:
-              {{ batch.expected_f1_end }}
-            </p>
-            <p>
-              Expected F2 End Date:
-              {{ batch.expected_f2_end }}
-            </p>
-          </div>
+          <p class="font-semibold">
+            Tracking Temperature:
+            <span class="font-normal">{{
+              batch.is_tracking_temperature ? "Yes" : "No"
+            }}</span>
+          </p>
+          <p class="font-semibold">
+            Tracking pH:
+            <span class="font-normal">{{
+              batch.is_tracking_PH ? "Yes" : "No"
+            }}</span>
+          </p>
         </div>
+
+        <FermentationCalendar
+          :startDate="batch.start_date"
+          :expectedF1End="batch.expected_f1_end"
+          :expectedF2End="batch.expected_f2_end"
+          :f1Days="batch.expand?.recipe?.F1Days"
+          :f2Days="batch.expand?.recipe?.F2Days"
+        />
       </div>
     </UCard>
   </div>
@@ -88,13 +119,14 @@
 
 <script setup>
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
+import FermentationProgress from "~/components/batch/FermentationProgress.vue";
 const { slug } = useRoute().params;
 const { getBatchBySlug, updateBatch } = usePocketBase();
 
 const queryClient = useQueryClient();
 
 const {
-  isLoading,
+  isPending,
   isError,
   data: batch,
   error,
@@ -124,38 +156,9 @@ const currentFermentationDay = computed(() => {
   return daysDifference;
 });
 // Computes the fermentation progress as a percentage based on the current fermentation day and total fermentation days.
-const fermentationProgress = computed(() => {
-  if (!batch.value?.start_date || !batch.value?.expand?.recipe) {
-    return 0;
-  }
-  const totalDays =
-    (batch.value.expand.recipe.F1Days || 0) +
-    (batch.value.expand.recipe.F2Days || 0);
-  return totalDays > 0 ? (currentFermentationDay.value / totalDays) * 100 : 0;
+const totalFermentationDays = computed(() => {
+  return (batch.value.expand?.recipe?.F1Days || 0) + (batch.value.expand?.recipe?.F2Days || 0);
 });
-
-// Computes the fermentation progress text based on the current stage of fermentation.
-const fermentationProgressText = computed(() => {
-  if (!batch.value?.stage || !batch.value?.expand?.recipe) {
-    return "Loading...";
-  }
-  if (batch.value.stage === "firstFermentation") {
-    return `Day ${currentFermentationDay.value} of ${
-      batch.value.expand.recipe.F1Days || 0
-    } (First Fermentation)`;
-  } else if (batch.value.stage === "secondFermentation") {
-    const secondFermentationDay =
-      currentFermentationDay.value - (batch.value.expand.recipe.F1Days || 0);
-    return `Day ${secondFermentationDay} of ${
-      batch.value.expand.recipe.F2Days || 0
-    } (Second Fermentation)`;
-  } else if (batch.value.stage === "pending") {
-    return "Pending to start fermentation";
-  } else {
-    return "Fermentation Complete";
-  }
-});
-
 
 const isUpdatingBatch = ref(false);
 //TODO: when moving to next stage, calculate the previous stage days and save them in the batch record
@@ -163,6 +166,7 @@ const moveToNextStage = () => {
   isUpdatingBatch.value = true;
   switch (batch.value.stage) {
     case "pending":
+      // sets the start date and calculates the expected end date for f1 and f2
       updateBatchMutation({
         stage: "firstFermentation",
         start_date: new Date().toISOString(),
@@ -176,11 +180,20 @@ const moveToNextStage = () => {
         ).toISOString(),
       });
       break;
+
     case "firstFermentation":
-      updateBatchMutation({ stage: "secondFermentation" });
+      // sets the f1 end date
+      updateBatchMutation({
+        stage: "secondFermentation",
+        f1_end_date: new Date().toISOString(),
+      });
       break;
     case "secondFermentation":
-      updateBatchMutation({ stage: "completed" });
+      // sets the f2 end date
+      updateBatchMutation({
+        stage: "completed",
+        end_date: new Date().toISOString(),
+      });
       break;
   }
 };
@@ -188,6 +201,10 @@ const moveToNextStage = () => {
 const isDiscardingBatch = ref(false);
 const discardBatch = () => {
   isDiscardingBatch.value = true;
-  updateBatchMutation({ stage: "discarded" });
+  updateBatchMutation({
+    stage: "discarded",
+    is_discarded: true,
+    end_date: new Date().toISOString(),
+  });
 };
 </script>

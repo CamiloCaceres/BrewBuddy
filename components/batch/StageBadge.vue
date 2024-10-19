@@ -1,8 +1,8 @@
 <template>
-  <UBadge :color="getStatusColor">{{ stageName }}</UBadge>
+  <UBadge variant="soft" :color="getStatusColor">{{ stageName }}</UBadge>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const props = defineProps({
   stage: {
     type: String,

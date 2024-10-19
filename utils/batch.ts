@@ -30,4 +30,16 @@ export const getStatusColor = (batchStatus: string) => {
         return "Unknown";
     }
   };
-  
+  // Computes the next stage button name based on the current stage of fermentation.
+export const getNextStageName = (batchStatus: string) => {
+    switch (batchStatus) {
+      case "pending":
+        return "Start First Fermentation";
+      case "firstFermentation":
+        return "Start Second Fermentation";
+      case "secondFermentation":
+        return "Complete Fermentation";
+      default:
+        return "Unknown Stage";
+    }
+  };

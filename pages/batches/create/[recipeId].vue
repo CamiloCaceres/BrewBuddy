@@ -87,16 +87,16 @@
 
       <div v-auto-animate class="mb-4 flex flex-col gap-2">
         <h2 class="text-xl font-semibold mb-2">Fermentation Timeline</h2>
-        <div class="flex gap-2 mb-2">
+        <div  v-if="formState.startDate" class="flex gap-2 mb-2">
           <div class="flex items-center gap-2">
-            <span class="w-8 h-8 bg-green-500 rounded-full"></span> <span class="font-semibold">F1</span>
+            <span class="w-8 h-8 bg-green-500 rounded-full"></span> <span class="font-semibold">F1</span><span>({{ recipe?.F1Days }} days)</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="w-8 h-8 bg-blue-500 rounded-full"></span> <span class="font-semibold">F2</span>
+            <span class="w-8 h-8 bg-blue-500 rounded-full"></span> <span class="font-semibold">F2</span><span>({{ recipe?.F2Days }} days)</span>
           </div>
         </div>
+        <VCalendar  v-if="formState.startDate"  :attributes="attributes" />
 
-        <VCalendar v-if="formState.startDate" :attributes="attributes" />
       </div>
 
       <UButton type="submit">Create Batch</UButton>

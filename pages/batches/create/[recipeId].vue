@@ -116,7 +116,7 @@
         <VCalendar v-if="formState.startDate" :attributes="attributes" />
       </div>
 
-      <UButton block icon="i-heroicons-plus" type="submit">Create Batch</UButton>
+      <UButton block icon="i-heroicons-plus" :loading="isSubmitting" type="submit">Create Batch</UButton>
     </UForm>
   </UContainer>
 </template>
@@ -131,6 +131,7 @@ const { currentUser, postBatch } = usePocketBase();
 
 const router = useRouter();
 const route = useRoute();
+const isSubmitting = ref(false);
 
 const { getRecipeById, pb } = usePocketBase();
 
@@ -222,10 +223,12 @@ const batchForUpload = computed(() => {
 // need to validate all data, and check if user is logged in
 //update api rules to only allow a user to create a batch to their own batches
 const createBatch = async () => {
+  isSubmitting.value = true;
   const batch = await postBatch(batchForUpload.value);
   const updatedBatch = await pb.collection('batches').update(batch.id, {
     slug: slugify(batch.name, batch.id),
   });
+  isSubmitting.value = false;
   router.push(`/batches/${updatedBatch.slug}`);
 };
 </script>

@@ -3,8 +3,6 @@
 </template>
 
 <script setup>
-import { getStatusColor } from "@/utils/batch";
-
 const props = defineProps({
   stage: {
     type: String,
@@ -32,7 +30,7 @@ const getStatusColor = computed(() => {
     case "pending":
       return "yellow";
     case "firstFermentation":
-      return "orange";
+      return "pink";
     case "secondFermentation":
       return "blue";
     case "completed":

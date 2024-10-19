@@ -11,6 +11,9 @@ importers:
       '@formkit/auto-animate':
         specifier: ^0.8.2
         version: 0.8.2
+      '@popperjs/core':
+        specifier: ^2.11.8
+        version: 2.11.8
       '@tanstack/vue-query':
         specifier: ^5.59.1
         version: 5.59.1(vue@3.5.11)

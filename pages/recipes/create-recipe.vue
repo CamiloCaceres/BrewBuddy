@@ -374,6 +374,7 @@ function prepareRecipeForSubmission(recipe: KombuchaRecipe) {
     F2Days: recipe.F2Days,
     F2ingredients: JSON.stringify(recipe.F2ingredients),
     isPublic: recipe.isPublic,
+    slug: slugify(recipe.name),
   };
 }
 

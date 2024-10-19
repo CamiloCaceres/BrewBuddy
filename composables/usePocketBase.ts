@@ -104,7 +104,11 @@ const getAllRecipesFiltered = async () => {
 //Batches
 const getAllBatches = async () => {
   try {
-    const records = await pb.collection('batches').getFullList();
+    //paginate this
+    const records = await pb.collection('batches').getFullList({
+      sort: '-created',
+      expand: 'recipe',
+    });
     return records;
   } catch (error) {
     console.error('Error fetching all batches:', error);
@@ -162,6 +166,7 @@ const getImageUrl = (item: any) => {
     getAllRecipesFiltered,
     postBatch,
     getBatchBySlug,
-    updateBatch
+    updateBatch,
+    getAllBatches
   }
 }

@@ -22,7 +22,7 @@
 
       />
       <UButton
-        to="/batches/create-batch"
+        to="/batches/create"
         size="lg"
         color="primary"
         label="Start Brewing Smarter"

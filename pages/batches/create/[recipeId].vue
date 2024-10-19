@@ -99,7 +99,7 @@
         />
       </UFormGroup>
 
-      <div v-if="formState.startDate" v-auto-animate class="mb-4 flex flex-col gap-2">
+<!--       <div v-if="formState.startDate" v-auto-animate class="mb-4 flex flex-col gap-2">
         <h2 class="text-xl font-semibold mb-2">Fermentation Timeline</h2>
         <div  class="flex gap-2 mb-2">
           <div class="flex items-center gap-2">
@@ -114,7 +114,7 @@
           </div>
         </div>
         <VCalendar v-if="formState.startDate" :attributes="attributes" />
-      </div>
+      </div> -->
 
       <UButton block icon="i-heroicons-plus" :loading="isSubmitting" type="submit">Create Batch</UButton>
     </UForm>
@@ -148,7 +148,6 @@ const selectedUnit = ref("grams");
 const unitOptions = ["grams", "cups"];
 
 const formState = reactive({
-  startDate: "",
   name: recipe.value?.name + " Batch",
   batchSize: recipe.value?.yield.amount,
   batchType: "batch" as "continuous" | "batch",
@@ -163,21 +162,8 @@ const formState = reactive({
   initialTemperature: 0,
 });
 
-const expected_f1_end_date = computed(() => {
-  if (!formState.startDate || !recipe.value) return null;
-  const startDate = new Date(formState.startDate);
-  return new Date(
-    startDate.getTime() + recipe.value.F1Days * 24 * 60 * 60 * 1000
-  );
-});
 
-const expected_f2_end_date = computed(() => {
-  if (!formState.startDate || !recipe.value) return null;
-  const startDate = new Date(formState.startDate);
-  const totalDays = recipe.value.F1Days + recipe.value.F2Days;
-  return new Date(startDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
-});
-
+/* 
 const attributes = computed(() => {
   if (
     !formState.startDate ||
@@ -202,20 +188,19 @@ const attributes = computed(() => {
       },
     },
   ];
-});
-
+}); */
 const batchForUpload = computed(() => {
   return {
     recipe: recipe.value.id,
     user: currentUser.value?.id,
-    isTrackVessel: formState.isTrackVessel,
-    isTrackTemperature: formState.isTrackTemperature,
-    isTrackPH: formState.isTrackPH,
-    f1Vessel: formState.f1Vessel,
-    f2Vessel: formState.f2Vessel,
-    initialPH: formState.initialPH,
-    initialTemperature: formState.initialTemperature,
-    batchType: formState.batchType,
+    is_tracking_vessel: formState.isTrackVessel,
+    is_tracking_temperature: formState.isTrackTemperature,
+    is_tracking_PH: formState.isTrackPH,
+    f1_vessel: formState.f1Vessel,
+    f2_vessel: formState.f2Vessel,
+    initial_PH: formState.initialPH,
+    initial_temperature: formState.initialTemperature,
+    brew_type: formState.batchType,
     stage: "pending",
     name: formState.name,
   };

@@ -9,31 +9,26 @@
     </template>
 
     <div class="space-y-4">
-      <div class="flex justify-between items-center">
-        <BatchFermentationProgress 
-          :currentDay="currentFermentationDay"
-          :totalDays="totalFermentationDays"
-          :stage="batch.stage"
-          :f1Days="batch.expand?.recipe?.F1Days"
-          :f2Days="batch.expand?.recipe?.F2Days"
-        />
-  
-      </div>
-
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <h4 class="text-sm font-semibold mb-2">Batch Information</h4>
-       
-        </div>
-        <div>
-          <h4 class="text-sm font-semibold mb-2">Entries</h4>
-        </div>
-      </div>
-      <div class="flex justify-end">
-        <UButton :to="`/batches/${batch.slug}`">View Batch</UButton>
-      </div>
+      <BatchFermentationProgress
+        :currentDay="currentFermentationDay"
+        :totalDays="totalFermentationDays"
+        :stage="batch.stage"
+        :f1Days="batch.expand?.recipe?.F1Days"
+        :f2Days="batch.expand?.recipe?.F2Days"
+      />
     </div>
+    <template #footer>
+      <div class="flex justify-end">
+        <UButton variant="outline" :to="`/batches/${batch.slug}`">
+          <template #trailing>
+            <UIcon
+              name="i-heroicons-arrow-right-20-solid"
+              class="w-5 h-5"
+            /> </template
+          >View Batch</UButton
+        >
+      </div>
+    </template>
   </UCard>
 </template>
 
@@ -62,5 +57,4 @@ const totalFermentationDays = computed(() => {
   const f2Days = props.batch.expand?.recipe?.F2Days || 0;
   return Math.max(1, f1Days + f2Days); // Ensure it's at least 1 to avoid division by zero
 });
-
 </script>

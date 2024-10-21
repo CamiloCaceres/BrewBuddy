@@ -1,79 +1,54 @@
 <template>
-    <UCard class="my-4 sm:my-8">
-      <template #header>
-        <div
-        class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0"
-        >
-        <h1 class="text-xl sm:text-2xl font-bold">Recipes</h1>
-        <UButton
-        to="/recipes/create-recipe"
-        color="primary"
-        icon="i-heroicons-plus"
-        class="hidden sm:inline-flex"
-        >
-        Create Recipe
-      </UButton>
-    </div>
-  </template>
   <div v-if="query?.isPending" class="space-y-4 sm:space-y-6">
     <USkeleton v-for="i in 3" :key="i" class="h-32 w-full" />
   </div>
-      <div v-else-if="query?.isError" class="text-red-500">Error: {{ query.error }}</div>
+  <div v-else-if="query?.isError" class="text-red-500">
+    Error: {{ query.error }}
+  </div>
 
-      <div v-else-if="query?.data" class="space-y-4 sm:space-y-6 relative">
-        <UCard v-for="recipe in query.data" :key="recipe.id" class="p-4">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0"
-          >
-            <div class="w-full sm:w-3/4">
-              <h2 class="text-lg sm:text-xl font-semibold">
-                {{ recipe.name }}
-              </h2>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
-                {{ recipe.description }}
-              </p>
-            </div>
-            <UBadge
-              :color="getTeaTypeColor(recipe.teaType)"
-              class="absolute top-2 md:top-4 right-2 md:right-4"
-              >{{ recipe.teaType }}</UBadge
-            >
-          </div>
-          <div
-            class="mt-4 flex flex-col justify-between items-start text-sm space-y-2 sm:space-y-0"
-          >
-            <p>Fermentation time: {{ recipe.F1Days + recipe.F2Days }} days</p>
-            <p class="text-gray-500 text-xs sm:text-sm">
-              By {{ recipe.expand?.author.name }} | Updated:
-              {{ formatDate(recipe.updated) }}
-            </p>
-            <UButton
-              variant="outline"
-              :to="`/recipes/${recipe.id}`"
-              class="ml-auto translate-y-4 md:translate-y-0"
-              >View Recipe</UButton
-            >
-          </div>
-        </UCard>
-      </div>
+  <div v-else-if="query?.data">
+    <h1 class="text-4xl font-bold my-6">Recipes</h1>
+    <div class="flex flex-wrap items-center gap-4 mb-8">
+      <UInput
+        v-model="searchQuery"
+        icon="i-heroicons-magnifying-glass"
+        placeholder="Search recipes"
+        class="flex-grow max-w-md"
+      />
+      <USelect
+        v-model="selectedFilter"
+        :options="filterOptions"
+        placeholder="Filter recipes"
+        icon="i-heroicons-adjustments-horizontal-20-solid"
+        class="w-48"
+      />
+      <UButton
+        icon="i-heroicons-plus"
+        to="/recipes/create-recipe"
+        class="sm:ml-auto"
+      >
+        Create Recipe
+      </UButton>
+    </div>
+    <h1 class="text-2xl font-bold py-4">
+      {{
+        filterOptions.find((option) => option.value === selectedFilter)?.label
+      }}
+    </h1>
 
-  
-    </UCard>
+    <div class="grid grid-cols-1 sm:grid-cols-2  gap-4 ">
+      <RecipeCard
+        v-for="recipe in filteredRecipes"
+        :key="recipe.id"
+        :recipe="recipe"
+      />
+    </div>
+  </div>
 
-    <!-- FAB for mobile -->
-    <UButton
-      :ui="{ rounded: 'rounded-full' }"
-      size="xl"
-      to="/recipes/create-recipe"
-      color="primary"
-      icon="i-heroicons-plus"
-      class="fixed right-4 bottom-4 shadow-lg sm:hidden"
-      aria-label="Create Recipe"
-    />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from "vue";
 import { usePocketBase } from "@/composables/usePocketBase";
 import { useQuery } from "@tanstack/vue-query";
 
@@ -81,8 +56,6 @@ const { getAllRecipes } = usePocketBase();
 
 const query = ref();
 
-
-//this page throws an error when the query is not inside onMounted. [id].vue works fine without it. Currently investigating.
 onMounted(() => {
   query.value = useQuery({
     queryKey: ["recipes"],
@@ -90,22 +63,36 @@ onMounted(() => {
   });
 });
 
-const getTeaTypeColor = (teaType: string) => {
-  const colors: any = {
-    Green: "green",
-    Black: "gray",
-    Oolong: "orange",
-    White: "yellow",
-    Herbal: "pink",
-  };
-  return colors[teaType] || "blue";
-};
+const searchQuery = ref("");
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
+const selectedFilter = ref("all");
+
+const filteredRecipes = computed(() => {
+  if (!query.value?.data) return [];
+  let recipes = query.value.data;
+  if (selectedFilter.value !== "all") {
+    recipes = recipes.filter((recipe: any) => recipe.teaType === selectedFilter.value);
+  }
+  if (searchQuery.value) {
+    const search = searchQuery.value.toLowerCase();
+    recipes = recipes.filter((recipe: any) =>
+      recipe.name.toLowerCase().includes(search) ||
+      recipe.description.toLowerCase().includes(search)
+    );
+  }
+  return recipes;
+});
+
+const filterOptions = [
+  { label: "All Recipes", value: "all" },
+  { label: "Black Tea", value: "Black" },
+  { label: "Green Tea", value: "Green" },
+  { label: "Oolong Tea", value: "Oolong" },
+  { label: "White Tea", value: "White" },
+  { label: "Herbal Tea", value: "Herbal" },
+];
+
+watch(selectedFilter, (newValue) => {
+  console.log(`Filter changed to: ${newValue}`);
+});
 </script>
